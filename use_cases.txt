@@ -1,4 +1,4 @@
-Actosr: 
+Actors: 
 Business client: 
 - has a login 
 - registers product (5kg, 20kg package, small parcel etc)
