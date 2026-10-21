@@ -1,0 +1,52 @@
+Actosr: 
+Business client: 
+- has a login 
+- registers product (5kg, 20kg package, small parcel etc)
+- places order (if online)
+- Enter the address/destination of the recipient (Backend automatically fetches lat & long of origin)
+- pays via card, apple/google pay, paypal
+- receives an invoice order/order confirmation
+- access the status of active order:
+- receives a tracking number from courier company
+- types in tracking number on the website
+- sees status
+
+Recipient client: 
+- access the status of active order:
+- receives a tracking number from courier company
+- types in tracking number on the website
+- sees status
+- access delivery
+- have parcel delivered to door
+- order complete
+- (else if not at home), have parcel delivered to shop
+- go to parcel shop to pick up
+- order complete
+
+Courier: (1 or more vehicles)
+- has a login
+- receives orders
+- chooses whether one or multiple orders in the route
+- select appropriate vehicle for the order
+- executes order
+- when delivered submit Electronic Proof of Delivery (digital Canvas signature or a delivery photo)
+- OR if cancelled order returns to the list of orders 
+- view completed orders
+
+Staff:
+- In charge of system governance
+- Validate courier accounts
+- Account approvals
+- Vehicle inspection and insurance validation
+
+Route operations (Operations Manager)
+- local distribution
+- daily transport planning
+- fleet management (how many trucks?)
+- Oversee vehicle routes 
+- Update vehicle whereabouts
+
+
+Customer service
+- receives complaint
+- serves customer
