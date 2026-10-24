@@ -1,0 +1,406 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+}
+
+/* Navigation bar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 60px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #dbe4ee;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #1e293b;
+}
+
+.brand-logo {
+    width: 48px;
+    height: 42px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.brand-text h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    line-height: 1;
+    color: #0f172a;
+}
+
+.brand-text p {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+    list-style: none;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #334155;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 20px;
+}
+
+.nav-links a:hover {
+    background-color: #f1f5f9;
+}
+
+.nav-links a.active {
+    background-color: #c9eefc;
+    color: #0f172a;
+}
+
+.btn-login {
+    background-color: #6bd0f6;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 10px 26px;
+    border-radius: 25px;
+    text-decoration: none;
+}
+
+.btn-login:hover {
+    background-color: #4ec2ee;
+}
+
+/* --- Homepage Hero --- */
+.hero {
+    min-height: 540px;
+    background: linear-gradient(rgba(16, 25, 35, 0.75), rgba(16, 25, 35, 0.65)),
+                url('delivery_pic.jpg') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    padding: 60px;
+    color: #ffffff;
+}
+
+.hero-content {
+    max-width: 700px;
+}
+
+.hero-subtitle {
+    color: #6bd0f6;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 84px;
+    line-height: 0.95;
+    margin-bottom: 30px;
+}
+
+.hero-title span {
+    color: #6bd0f6;
+}
+
+/* --- Tracking Form --- */
+.tracking-wrapper {
+    margin-bottom: 24px;
+    max-width: 600px;
+}
+
+.tracking-form {
+    display: flex;
+    background-color: #ffffff;
+    padding: 8px 8px 8px 20px;
+    border-radius: 40px;
+}
+
+.tracking-form input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+}
+
+.btn-track {
+    background-color: #6bd0f6;
+    color: #0f172a;
+    border: none;
+    padding: 12px 26px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-track:hover {
+    background-color: #4ec2ee;
+}
+
+#tracking-msg {
+    margin-top: 10px;
+    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    display: none;
+}
+
+.msg-error {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.msg-success {
+    background-color: #10b981;
+    color: #ffffff;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-light {
+    background-color: #ffffff;
+    color: #6bd0f6;
+    padding: 13px 28px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.btn-outline {
+    background-color: rgba(16, 25, 35, 0.6);
+    color: #6bd0f6;
+    border: 1.5px solid #6bd0f6;
+    padding: 13px 28px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+/* --- Metrics & Highlights (Flexbox container) --- */
+.metrics-bar {
+    background-color: #ffffff;
+    padding: 35px 60px;
+    border-bottom: 1px solid #dbe4ee;
+}
+
+.metrics-grid {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.metric-box h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    color: #0f172a;
+}
+
+.metric-box p {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.services-section {
+    padding: 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.services-section h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    text-align: center;
+    margin-bottom: 35px;
+    color: #0f172a;
+}
+
+.services-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.service-card {
+    background: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    padding: 28px;
+    flex: 1;
+}
+
+.service-card h4 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #0f172a;
+}
+
+.service-card p {
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* --- Team Page --- */
+.team-banner {
+    background-color: #101923;
+    padding: 45px 60px;
+    color: #ffffff;
+}
+
+.banner-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.team-label {
+    color: #6bd0f6;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.team-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 68px;
+    line-height: 1;
+}
+
+.course-sub {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.team-section {
+    max-width: 1200px;
+    margin: 45px auto 70px;
+    padding: 0 60px;
+    width: 100%;
+}
+
+.team-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    justify-content: center;
+}
+
+.team-card {
+    background-color: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    padding: 36px 25px;
+    text-align: center;
+    width: 48%;
+}
+
+.avatar-circle {
+    width: 100px;
+    height: 100px;
+    background-color: #6bd0f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    color: #0f172a;
+}
+
+.member-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.member-role {
+    color: #64748b;
+    font-size: 15px;
+    margin-bottom: 16px;
+}
+
+.academic-info {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 14px;
+    font-size: 13px;
+    color: #475569;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.academic-info a {
+    color: #0284c7;
+    text-decoration: none;
+}
+
+footer {
+    background-color: #101923;
+    color: #94a3b8;
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+    margin-top: auto;
+}
+
+@media (max-width: 850px) {
+    .navbar {
+        flex-direction: column;
+        gap: 12px;
+        padding: 15px 20px;
+    }
+    .hero, .services-section, .team-section, .team-banner, .metrics-bar {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .hero-title {
+        font-size: 56px;
+    }
+    .services-grid, .team-grid, .metrics-grid {
+        flex-direction: column;
+    }
+    .team-card {
+        width: 100%;
+    }
+}
