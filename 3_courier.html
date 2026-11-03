@@ -3,11 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lorum ipsum dolor sit amet</title>
-
+    <title>Courier – PDP</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    Not implemented.
-    
+
+    <!-- Navigation bar (shared with the other pages) -->
+    <header class="navbar">
+        <a href="0_homepage.html" class="brand">
+            <img src="logo.jpeg" alt="PDP logo" class="brand-logo">
+            <div class="brand-text">
+                <h1>PDP</h1>
+                <p>Pigeon Delivery Parcel</p>
+            </div>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="0_homepage.html">Home</a></li>
+                <li><a href="2_client.html">Client</a></li>
+                <li><a href="3_courier.html" class="active">Courier</a></li>
+                <li><a href="5_staff.html">Staff</a></li>
+                <li><a href="4_admin.html">Admin</a></li>
+                <li><a href="6_team.html">Team</a></li>
+                <li><a href="#">Customer service</a></li>
+            </ul>
+        </nav>
+        <a href="1_login.html" class="btn-login">LOGIN</a>
+    </header>
+
+    <main>
+        <!-- Page banner (reuses the team page banner classes) -->
+        <section class="team-banner">
+            <div class="banner-content">
+                <p class="team-label">COURIER</p>
+                <h2 class="team-heading">Today's Route</h2>
+            </div>
+        </section>
+
+        <div class="courier-section">
+
+            <!-- Route summary -->
+            <section class="route-stats">
+                <div class="stat-card">
+                    <p>Stops today</p>
+                    <h3>3</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Delivered</p>
+                    <h3>1</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Remaining</p>
+                    <h3>2</h3>
+                </div>
+            </section>
+
+            <!-- Route map (placeholder for now) -->
+            <section class="route-map">
+                <p>Route map</p>
+                <span class="map-label map-label-depot">Depot</span>
+                <span class="map-label map-label-dest">Destination</span>
+            </section>
+
+            <!-- Delivery stops -->
+            <section class="stops-grid">
+                <article class="stop-card">
+                    <div class="stop-info">
+                        <p class="stop-id">RR-1042</p>
+                        <h4 class="stop-name">Ana Silva</h4>
+                        <p class="stop-address">Rua Augusta 120, Lisboa</p>
+                        <span class="status-badge status-transit">In transit</span>
+                    </div>
+                    <button class="btn-deliver">Mark delivered</button>
+                </article>
+
+                <article class="stop-card">
+                    <div class="stop-info">
+                        <p class="stop-id">RR-1039</p>
+                        <h4 class="stop-name">Marta Reis</h4>
+                        <p class="stop-address">Rua do Carmo 8, Lisboa</p>
+                        <span class="status-badge status-pending">Pending</span>
+                    </div>
+                    <button class="btn-deliver">Mark delivered</button>
+                </article>
+
+                <article class="stop-card">
+                    <div class="stop-info">
+                        <p class="stop-id">RR-1036</p>
+                        <h4 class="stop-name">Pedro Lopes</h4>
+                        <p class="stop-address">Praça do Comércio 2, Lisboa</p>
+                        <span class="status-badge status-delivered">Delivered</span>
+                    </div>
+                </article>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2026 PDP. Fast. Tracked. Delivered.</p>
+    </footer>
+
 </body>
 </html>
