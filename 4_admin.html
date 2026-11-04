@@ -3,11 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lorum ipsum dolor sit amet</title>
+    <title>PDP - admin</title>
+    <link rel="stylesheet" href="style.css">
 
 </head>
 <body>
-    Not implemented.
+    <!--Header the website, implemented the logo, navigation bar and login button"" -->
+    <header class="navbar">
+            <a href="0_homepage.html" class="brand">
+                <img src="logo.jpeg" alt="PDP" class="brand-logo">
+                <div class="brand-text">
+                    <h1>PDP</h1>
+                    <p>Pigeon Delivery Parcel</p>
+                </div>
+            </a>
+        <!--navigation bar with links to different pages, the active page is highlighted"" -->
+        <nav class="nav-links">
+            <a href="0_homepage.html">Home</a>
+            <a href="2_client.html">Client</a>
+            <a href="3_courier.html">Courier</a>
+            <a href="5_staff.html">Staff</a>
+            <a href="4_admin.html" class="active">Admin</a>
+            <a href="6_team.html">Team</a>
+            <a href="#">Customer service</a>
+        </nav>
+        
+        <a href="1_login.html" class="btn-login">Login</a>
+      </header>
+    
+      <!-- Header for the controlroom  -->
+      <section class="team-banner">
+        <div class="banner-content">
+            <p class="team-label">ADMIN</p>
+            <h2 class="team-heading">Control Room</h2>
+        </div>
+    </section>
+    
+      <!-- Main  -->
+      <main class="dashboard-container">
+        
+        <!-- statistics -->
+        <section class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-title">Revenue (week)</span>
+            <div class="stat-value">€1000</div>
+          </div>
+          
+          <div class="stat-card">
+            <span class="stat-title highlighted-title">Deliveries</span>
+            <div class="stat-value blue-text">500</div>
+          </div>
+          
+          <div class="stat-card">
+            <span class="stat-title">Active users</span>
+            <div class="stat-value blue-text">3</div>
+          </div>
+          
+          <div class="stat-card">
+            <span class="stat-title">On-time</span>
+            <div class="stat-value blue-text">99%</div>
+          </div>
+        </section>
+    
+        <!-- Main section, diagram and resources -->
+        <section class="content-grid">
+          
+          <!-- left section: Diagram for deliveries -->
+          <div class="card chart-card">
+            <h2>DELIVERIES THIS WEEK</h2>
+            
+            <div class="bar-chart">
+              <div class="bar-group">
+                <div class="bar" style="height: 35%;"></div>
+                <span>Mon</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 50%;"></div>
+                <span>Tue</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 42%;"></div>
+                <span>Wed</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 70%;"></div>
+                <span>Thu</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 60%;"></div>
+                <span>Fri</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 85%;"></div>
+                <span>Sat</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height: 95%;"></div>
+                <span>Sun</span>
+              </div>
+            </div>
+          </div>
+    
+          <!-- user list -->
+          <div class="card users-card">
+            <h2>USERS</h2>
+            
+            <ul class="user-list">
+              <li class="user-item">
+                <div class="user-info">
+                  <strong>Marc</strong>
+                  <span class="user-role">Client</span>
+                </div>
+                <span class="badge badge-active">ACTIVE</span>
+              </li>
+              
+              <li class="user-item">
+                <div class="user-info">
+                  <strong>Christie</strong>
+                  <span class="user-role">Courier</span>
+                </div>
+                <span class="badge badge-active">ACTIVE</span>
+              </li>
+              
+              <li class="user-item">
+                <div class="user-info">
+                  <strong>Precilla</strong>
+                  <span class="user-role">Courier</span>
+                </div>
+                <span class="badge badge-active">ACTIVE</span>
+              </li>
+              
+              <li class="user-item">
+                <div class="user-info">
+                  <strong>Marcus</strong>
+                  <span class="user-role">Staff</span>
+                </div>
+                <span class="badge badge-disabled">DISABLED</span>
+              </li>
+            </ul>
+          </div>
+    
+        </section>
+      </main> 
 
 </body>
 </html>
