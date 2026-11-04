@@ -29,7 +29,51 @@
         <a href="1_login.html" class="btn-login">Login</a>
     </nav>
 
-    <!-- first setup of the homepage, tried to link it with the other pages as well as the style sheet-->
-    
+    <main>
+        <header class="hero">
+            <div class="hero-content">
+                <p class="hero-subtitle">SAME-DAY DELIVERY</p>
+                <h2 class="hero-title">PDP <span>PIGEON DELIVERY<br>PARCEL</span></h2>
+
+                <div class="tracking-wrapper">
+                    <form class="tracking-form" onsubmit="return checkTracking(event)">
+                        <input type="text" id="trackingNumber" placeholder="Enter tracking number e.g. RR-1042">
+                        <button type="submit" class="btn-track">TRACK</button>
+                    </form>
+                    <div id="tracking-msg"></div>
+                </div>
+
+                <div class="hero-buttons">
+                    <a href="1_login.html" class="btn-light">GET STARTED</a>
+                    <a href="6_team.html" class="btn-outline">MEET THE TEAM</a>
+                </div>
+            </div>
+        </header>
+
+        <section class="services-section">
+            <h2>SYSTEM OVERVIEW</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <h4>CLIENT PORTAL</h4>
+                    <p>Register parcels, specify origin and destination coordinates on OpenStreetMap, and check active delivery statuses.</p>
+                </div>
+                <div class="service-card">
+                    <h4>COURIER COCKPIT</h4>
+                    <p>Select active vehicles, execute single or consolidated routes, and submit electronic proof of delivery.</p>
+                </div>
+                <div class="service-card">
+                    <h4>BACKOFFICE &amp; ADMIN</h4>
+                    <p>Validate courier accounts, verify vehicle documents, and monitor operational KPIs.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
+    </footer>
+
+<!-- now i think i just need to add the form validation-->
+
 </body>
 </html>
