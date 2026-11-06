@@ -384,23 +384,143 @@ footer {
     margin-top: auto;
 }
 
-@media (max-width: 850px) {
-    .navbar {
-        flex-direction: column;
-        gap: 12px;
-        padding: 15px 20px;
-    }
-    .hero, .services-section, .team-section, .team-banner, .metrics-bar {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-    .hero-title {
-        font-size: 56px;
-    }
-    .services-grid, .team-grid, .metrics-grid {
-        flex-direction: column;
-    }
-    .team-card {
-        width: 100%;
-    }
+/* ---ADMIN Main dashboard --- */
+.dashboard {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
 }
+
+/* ---  (KPI) --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.stat-card {
+    background-color: #ffffff;
+    padding: 22px;
+    border-radius: 16px;
+    border: 1px solid #e1e8ed;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.stat-title {
+    font-size: 13px;
+    color: #5e6c84;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 30px;
+    font-weight: 800;
+    color: #0b6bcb;
+    margin-top: 6px;
+}
+
+/* ---  (Diagram & users) --- */
+.card {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid #e1e8ed;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.card h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #172b4d;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+/* --- 2. Stapeldiagram --- */
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 180px;
+    padding-top: 20px;
+}
+
+.bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    width: 11%;
+    gap: 8px;
+}
+
+.bar {
+    width: 100%;
+    height: var(--bar-height); 
+    min-height: 20px; 
+    background-color: #72cff9;
+    border-radius: 6px 6px 0 0;
+}
+
+.bar-day {
+    font-size: 12px;
+    color: #5e6c84;
+    font-weight: 500;
+}
+
+/* --- 3. Användarlista --- */
+.user-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #172b4d;
+}
+
+.user-role {
+    font-size: 13px;
+    color: #7a869a;
+    margin-top: 2px;
+}
+
+/* ---  Badges  --- */
+.badge {
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.badge-active {
+    background-color: #72cff9;
+    color: #003853;
+}
+
+.badge-disabled {
+    background-color: transparent;
+    color: #72cff9;
+    border: 2px solid #72cff9;
+}
+
+
