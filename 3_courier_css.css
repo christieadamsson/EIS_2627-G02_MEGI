@@ -1,0 +1,252 @@
+/* =========================================
+   Courier page (3_courier_iteration2.html)
+   Builds on style.css – load this file after it
+   ========================================= */
+
+.courier-section {
+    max-width: 1320px;          /* 1200px content + 2 x 60px padding, lines up with the banner */
+    margin: 45px auto 70px;
+    padding: 0 60px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* --- Route summary --- */
+.route-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat-card {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    padding: 26px 25px;
+}
+
+.stat-card p {
+    color: #475569;
+    font-size: 15px;
+}
+
+.stat-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: 52px;
+    line-height: 1;
+    color: #075985;
+    margin-top: 6px;
+}
+
+/* --- Route map --- */
+.route-map {
+    position: relative;
+    height: 320px;
+    background-color: #e0f4fd;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.route-map svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.route-line {
+    fill: none;
+    stroke: #6bd0f6;
+    stroke-width: 4;
+    stroke-dasharray: 10 8;
+    stroke-linecap: round;
+}
+
+.map-stop {
+    fill: #6bd0f6;
+    stroke: #ffffff;
+    stroke-width: 4;
+    transition: fill 0.3s;
+}
+
+.map-stop.done {
+    fill: #101923;
+}
+
+.map-label {
+    position: absolute;
+    bottom: 16px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.map-label-depot {
+    left: 16px;
+    background-color: #ffffff;
+}
+
+.map-label-dest {
+    right: 16px;
+    background-color: #6bd0f6;
+}
+
+/* --- Delivery stops --- */
+.stops-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.stop-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    background-color: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    padding: 28px 25px;
+}
+
+.stop-id {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    line-height: 1.1;
+    color: #075985;
+}
+
+.stop-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1.2;
+    color: #0f172a;
+}
+
+.stop-address {
+    color: #64748b;
+    font-size: 15px;
+    margin-bottom: 14px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 3px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-transit {
+    background-color: #c9eefc;
+    color: #0f172a;
+}
+
+.status-pending {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.status-delivered {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.btn-deliver {
+    background-color: #6bd0f6;
+    color: #0f172a;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 30px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(107, 208, 246, 0.35);
+}
+
+.btn-deliver:hover {
+    background-color: #4ec2ee;
+}
+
+.btn-deliver:focus-visible {
+    outline: 3px solid #0284c7;
+    outline-offset: 2px;
+}
+
+/* --- Footer with logo --- */
+footer.footer-large {
+    padding: 40px 60px;
+}
+
+.footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    text-align: left;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #ffffff;
+}
+
+.footer-brand img {
+    width: 88px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.footer-brand h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.footer-brand p {
+    font-size: 15px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 850px) {
+    .courier-section {
+        padding: 0 20px;
+    }
+    .route-stats {
+        flex-direction: column;
+    }
+    .stops-grid {
+        grid-template-columns: 1fr;
+    }
+    .route-map {
+        height: 240px;
+    }
+    footer.footer-large {
+        padding: 30px 20px;
+    }
+    .footer-inner {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 500px) {
+    .stop-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

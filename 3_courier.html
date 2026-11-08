@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courier – PDP</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="courier_iteration2.css">
 </head>
 <body>
 
@@ -58,9 +59,20 @@
                 </div>
             </section>
 
-            <!-- Route map (placeholder for now) -->
+            <!-- Route map -->
             <section class="route-map">
-                <p>Route map</p>
+                <svg viewBox="0 0 700 320" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of today's route with three stops">
+                    <defs>
+                        <pattern id="grid" width="57" height="57" patternUnits="userSpaceOnUse">
+                            <path d="M57 0 L0 0 0 57" fill="none" stroke="#c7e3f0" stroke-width="1"/>
+                        </pattern>
+                    </defs>
+                    <rect width="700" height="320" fill="url(#grid)"/>
+                    <path class="route-line" d="M46 251 C 90 180, 140 168, 180 172 S 270 205, 320 196 S 420 55, 520 48 S 620 120, 640 183"/>
+                    <circle class="map-stop done" data-stop="RR-1036" cx="46" cy="251" r="11"/>
+                    <circle class="map-stop" data-stop="RR-1042" cx="320" cy="196" r="11"/>
+                    <circle class="map-stop" data-stop="RR-1039" cx="640" cy="183" r="11"/>
+                </svg>
                 <span class="map-label map-label-depot">Depot</span>
                 <span class="map-label map-label-dest">Destination</span>
             </section>
@@ -100,8 +112,17 @@
         </div>
     </main>
 
-    <footer>
-        <p>© 2026 PDP. Fast. Tracked. Delivered.</p>
+    <footer class="footer-large">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <img src="logo.jpeg" alt="PDP logo">
+                <div>
+                    <h3>PDP</h3>
+                    <p>Pigeon Delivery Parcel</p>
+                </div>
+            </div>
+            <p>© 2026 PDP. Fast. Tracked. Delivered.</p>
+        </div>
     </footer>
 
 </body>
