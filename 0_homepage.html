@@ -17,7 +17,7 @@
         </a>
 
         <ol class="nav-links">
-            <li><a href="o_homepage.html" class="active">Home</a></li>
+            <li><a href="0_homepage.html" class="active">Home</a></li>
             <li><a href="2_client.html">Client</a></li>
             <li><a href="3_courier.html">Courier</a></li>
             <li><a href="4_admin.html">Admin</a></li>
@@ -73,7 +73,28 @@
         <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
     </footer>
 
-<!-- now i think i just need to add the form validation-->
+    <!-- Form validation -->
+    <!-- might be necessary to see if we want to check something else, like if tracking no. should have a specific form e.g., "XX-123" etc, but this is basic-->
+    <script>
+        function checkTracking(event) {
+            event.preventDefault();
+            var input = document.getElementById("trackingNumber").value.trim();
+            var msgBox = document.getElementById("tracking-msg");
+
+            if (input === "") {
+                alert("Please enter a tracking number.");
+                msgBox.style.display = "block";
+                msgBox.className = "msg-error";
+                msgBox.textContent = "Error: Field cannot be empty.";
+                return false;
+            }
+
+            msgBox.style.display = "block";
+            msgBox.className = "msg-success";
+            msgBox.textContent = "Order found.";
+            return true;
+        }
+    </script>
 
 </body>
 </html>

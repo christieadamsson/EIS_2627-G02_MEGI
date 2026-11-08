@@ -21,6 +21,7 @@ const dashboardData = {
       { name: "MARC ALEXANDER FERSCHKE", role: "TEAM MEMBER", status: "ACTIVE" },
       { name: "CHRISTIE ADAMSSON", role: "TEAM MEMBER", status: "DISABLED" }
     ]
+    //Why am I disabled ahahah /C :(
   };
   
   // Funktions building the dashboard components
