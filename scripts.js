@@ -1,4 +1,4 @@
-// --- 1. Data för webbplatsen ---
+// --- 1. Data for the website ---
 const dashboardData = {
   stats: [
     { title: "Revenue (week)", value: "€12.4K" },
@@ -31,7 +31,7 @@ const dispatchData = [
 ];
 
 
-// --- 2. Renderingsfunktioner ---
+// --- 2. Renderingsfunctions ---
 
 function renderStats(stats) {
 const container = document.getElementById("stats-container");
@@ -139,7 +139,7 @@ container.innerHTML = pendingStaff.map((staff, index) => `
 }
 
 
-// --- 3. Hantera godkännande / nekande ---
+// --- 3. handling approved and reject  ---
 
 window.approveStaff = function(index) {
 let pendingStaff = JSON.parse(localStorage.getItem("pendingStaff")) || [];
@@ -147,21 +147,21 @@ let users = JSON.parse(localStorage.getItem("adminUsers")) || dashboardData.user
 
 const approved = pendingStaff[index];
 
-// Lägg till i användarlistan med status ACTIVE
+// adds user and adds ACTIVE
 users.push({
   name: approved.name.toUpperCase(),
   role: approved.role.toUpperCase(),
   status: "ACTIVE"
 });
 
-// Ta bort från väntande-listan
+// removes from pendingStaff
 pendingStaff.splice(index, 1);
 
-// Spara i localStorage
+// saves in local storage 
 localStorage.setItem("adminUsers", JSON.stringify(users));
 localStorage.setItem("pendingStaff", JSON.stringify(pendingStaff));
 
-// Uppdatera gränssnittet
+// Updates
 renderUsers();
 renderStaffApprovals();
 
@@ -177,17 +177,17 @@ renderStaffApprovals();
 };
 
 
-// --- 4. Händelselyssnare vid sidladdning ---
+// --- 4. event lisener  ---
 
 document.addEventListener("DOMContentLoaded", () => {
-// Kör befintliga dashboard-funktioner
+// activetes daschboard data and renders the stats, chart, users, dispatch table, and staff approvals
 renderStats(dashboardData.stats);
 renderChart(dashboardData.weeklyDeliveries);
 renderUsers();
 renderDispatchTable();
 renderStaffApprovals();
 
-// Hantera formuläret för att lägga till personal (på Staff-sidan)
+// Handles the form submission for adding new staff to pending approvals
 const staffForm = document.getElementById("add-staff-form");
 if (staffForm) {
   staffForm.addEventListener("submit", (e) => {
@@ -197,8 +197,8 @@ if (staffForm) {
     const role = document.getElementById("new-staff-role").value;
     
     let pendingStaff = JSON.parse(localStorage.getItem("pendingStaff")) || [
-      { name: "Johan Lindström", role: "Logistics Coordinator" },
-      { name: "Elin Berg", role: "Fleet Assistant" }
+      { name: "Grey berg", role: "Logistics Coordinator" },
+      { name: "Elin berg", role: "Fleet Assistant" }
     ];
     
     pendingStaff.push({ name, role });

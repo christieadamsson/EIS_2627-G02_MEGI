@@ -561,7 +561,7 @@ footer {
     color: #0b6bcb;
 }
 
-/* Status-badges specifika för dispatch */
+/* Status-badges sspecific dispatches */
 .badge-transit {
     background-color: #c9eefc;
     color: #003853;
@@ -592,7 +592,7 @@ footer {
     display: inline-block;
 }
 
-/* Dropdown för kurir-tilldelning */
+/* Dropdown for kurir*/
 .courier-select {
     padding: 8px 12px;
     border-radius: 20px;
