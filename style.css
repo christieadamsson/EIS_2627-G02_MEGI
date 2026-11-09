@@ -523,4 +523,86 @@ footer {
     border: 2px solid #72cff9;
 }
 
+/* --- STAFF LAYOUT --- */
+/* --- Dispatch Table --- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.dispatch-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.dispatch-table th {
+    font-size: 13px;
+    font-weight: 700;
+    color: #172b4d;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e1e8ed;
+}
+
+.dispatch-table td {
+    padding: 16px 0;
+    font-size: 14px;
+    color: #1e293b;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+}
+
+.dispatch-table tr:last-child td {
+    border-bottom: none;
+}
+
+.order-id {
+    font-weight: 700;
+    color: #0b6bcb;
+}
+
+/* Status-badges specifika för dispatch */
+.badge-transit {
+    background-color: #c9eefc;
+    color: #003853;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-block;
+}
+
+.badge-delivered {
+    background-color: #d1fae5;
+    color: #065f46;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-block;
+}
+
+.badge-pending {
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-block;
+}
+
+/* Dropdown för kurir-tilldelning */
+.courier-select {
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #1e293b;
+    outline: none;
+    cursor: pointer;
+    width: 140px;
+}
 

@@ -38,5 +38,61 @@
             <h2 class="team-heading">Dispatch Centre</h2>
         </div>
     </section>
+    <main class="dashboard">
+  
+        <!-- 1. Statistik-kort (KPI for Dispatch) -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-title">Orders</div>
+            <div class="stat-value" id="total-orders">4</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Pending</div>
+            <div class="stat-value" id="pending-orders">1</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">In transit</div>
+            <div class="stat-value" id="transit-orders">1</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Couriers on shift</div>
+            <div class="stat-value">4</div>
+          </div>
+        </div>
+      
+        <!-- 2. Order- och Dispatch-tabell -->
+        <div class="card">
+          <div class="table-responsive">
+            <table class="dispatch-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Recipient</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Courier</th>
+                </tr>
+              <tbody id="dispatch-table-body">
+                <!-- fills in with java -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- Add new staff members -->
+        <section class="card" style="margin-bottom: 25px;">
+            <h2>Add New Staff Member</h2>
+            <form id="add-staff-form" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #172b4d;">Name</label>
+                    <input type="text" id="new-staff-name" placeholder="Full name" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: 'Inter', sans-serif;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #172b4d;">Role</label>
+                    <input type="text" id="new-staff-role" placeholder="e.g. Fleet Assistant" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: 'Inter', sans-serif;">
+                </div>
+                <button type="submit" class="badge badge-active" style="cursor: pointer; border: none; padding: 12px 24px; font-size: 14px;">Add Staff</button>
+            </form>
+        </section>
+        <script src="scripts.js" defer></script>
 </body>
 </html>
