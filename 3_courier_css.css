@@ -1,5 +1,5 @@
 /* =========================================
-   Courier page (3_courier_iteration2.html)
+   Courier page (3_courier.html)
    Builds on style.css – load this file after it
    ========================================= */
 
@@ -180,6 +180,14 @@
 .btn-deliver:focus-visible {
     outline: 3px solid #0284c7;
     outline-offset: 2px;
+}
+
+/* --- Confirmation message (colours come from .msg-success in style.css) --- */
+.courier-msg {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
 }
 
 /* --- Footer with logo --- */

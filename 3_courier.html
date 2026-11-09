@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courier – PDP</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="courier_iteration2.css">
+    <link rel="stylesheet" href="3_courier_css.css">
 </head>
 <body>
 
@@ -47,15 +47,15 @@
             <section class="route-stats">
                 <div class="stat-card">
                     <p>Stops today</p>
-                    <h3>3</h3>
+                    <h3 id="stat-total">3</h3>
                 </div>
                 <div class="stat-card">
                     <p>Delivered</p>
-                    <h3>1</h3>
+                    <h3 id="stat-delivered">1</h3>
                 </div>
                 <div class="stat-card">
                     <p>Remaining</p>
-                    <h3>2</h3>
+                    <h3 id="stat-remaining">2</h3>
                 </div>
             </section>
 
@@ -77,37 +77,11 @@
                 <span class="map-label map-label-dest">Destination</span>
             </section>
 
-            <!-- Delivery stops -->
-            <section class="stops-grid">
-                <article class="stop-card">
-                    <div class="stop-info">
-                        <p class="stop-id">RR-1042</p>
-                        <h4 class="stop-name">Ana Silva</h4>
-                        <p class="stop-address">Rua Augusta 120, Lisboa</p>
-                        <span class="status-badge status-transit">In transit</span>
-                    </div>
-                    <button class="btn-deliver">Mark delivered</button>
-                </article>
+            <!-- Confirmation message, shown by courier.js -->
+            <p id="courier-msg" class="courier-msg msg-success" role="status" hidden></p>
 
-                <article class="stop-card">
-                    <div class="stop-info">
-                        <p class="stop-id">RR-1039</p>
-                        <h4 class="stop-name">Marta Reis</h4>
-                        <p class="stop-address">Rua do Carmo 8, Lisboa</p>
-                        <span class="status-badge status-pending">Pending</span>
-                    </div>
-                    <button class="btn-deliver">Mark delivered</button>
-                </article>
-
-                <article class="stop-card">
-                    <div class="stop-info">
-                        <p class="stop-id">RR-1036</p>
-                        <h4 class="stop-name">Pedro Lopes</h4>
-                        <p class="stop-address">Praça do Comércio 2, Lisboa</p>
-                        <span class="status-badge status-delivered">Delivered</span>
-                    </div>
-                </article>
-            </section>
+            <!-- Delivery stops, rendered by courier.js from the stops list -->
+            <section class="stops-grid" id="stops-grid"></section>
 
         </div>
     </main>
@@ -125,5 +99,6 @@
         </div>
     </footer>
 
+    <script src="courier.js"></script>
 </body>
 </html>
