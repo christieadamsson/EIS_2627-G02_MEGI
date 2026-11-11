@@ -3,11 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lorum ipsum dolor sit amet</title>
-
+    <title>PDP - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="1_login_css.css">
 </head>
 <body>
-    Not implemented 
-    
+    <!-- Header with logo, navigation bar and login button -->
+    <header class="navbar">
+        <a href="0_homepage.html" class="brand">
+            <img src="logo.jpeg" alt="PDP" class="brand-logo">
+            <div class="brand-text">
+                <h1>PDP</h1>
+                <p>Pigeon Delivery Parcel</p>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="0_homepage.html">Home</a>
+            <a href="2_client.html">Client</a>
+            <a href="3_courier.html">Courier</a>
+            <a href="5_staff.html">Staff</a>
+            <a href="4_admin.html">Admin</a>
+            <a href="6_team.html">Team</a>
+            <a href="#">Customer service</a>
+        </nav>
+        <a href="1_login.html" class="btn-login">Login</a>
+    </header>
+
+    <main>
+        <!-- Page banner (same classes as the other pages) -->
+        <section class="team-banner">
+            <div class="banner-content">
+                <p class="team-label">ACCOUNT</p>
+                <h2 class="team-heading">Login &amp; Register</h2>
+            </div>
+        </section>
+
+        <div class="auth-section">
+
+            <!-- Left: information about the roles + demo accounts -->
+            <aside class="auth-info">
+                <h3>One account, four roles</h3>
+                <p>After logging in you are taken straight to the area for your role.</p>
+                <ul class="role-list">
+                    <li><strong>Client</strong>Register products, place orders and track deliveries.</li>
+                    <li><strong>Courier</strong>Choose a vehicle, run routes and submit proof of delivery.</li>
+                    <li><strong>Staff</strong>Validate courier accounts, vehicles and documents.</li>
+                    <li><strong>Admin</strong>Approve new staff members and view the KPI dashboard.</li>
+                </ul>
+
+                <div class="demo-box">
+                    <h4>Demo accounts</h4>
+                    <div class="table-scroll">
+                        <table class="demo-table">
+                            <thead>
+                                <tr><th>Role</th><th>Email</th><th>Password</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Client</td><td>client@pdp.pt</td><td>client123</td></tr>
+                                <tr><td>Courier</td><td>courier@pdp.pt</td><td>courier123</td></tr>
+                                <tr><td>Staff</td><td>staff@pdp.pt</td><td>staff123</td></tr>
+                                <tr><td>Admin</td><td>admin@pdp.pt</td><td>admin123</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right: login and register forms -->
+            <div class="auth-card">
+                <div class="auth-tabs" role="tablist">
+                    <button type="button" class="auth-tab active" id="tab-login" role="tab" aria-selected="true" aria-controls="login-form">Login</button>
+                    <button type="button" class="auth-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="register-form">Register</button>
+                </div>
+
+                <!-- Success / error message, filled by login.js -->
+                <div id="auth-msg" class="auth-msg" role="alert" hidden></div>
+
+                <!-- Login form -->
+                <form id="login-form" class="auth-form" role="tabpanel" aria-labelledby="tab-login" novalidate>
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" autocomplete="email" placeholder="name@example.com" required>
+                        <span class="field-error" id="login-email-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" autocomplete="current-password" required>
+                        <span class="field-error" id="login-password-error"></span>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Login</button>
+                    <p class="switch-text">No account yet? <a href="#register" data-switch="register">Register here</a></p>
+                </form>
+
+                <!-- Register form -->
+                <form id="register-form" class="auth-form" role="tabpanel" aria-labelledby="tab-register" novalidate hidden>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-name">Full name</label>
+                            <input type="text" id="reg-name" autocomplete="name" required>
+                            <span class="field-error" id="reg-name-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-username">Username</label>
+                            <input type="text" id="reg-username" autocomplete="username" required>
+                            <span class="field-error" id="reg-username-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-email">Email</label>
+                        <input type="email" id="reg-email" autocomplete="email" placeholder="name@example.com" required>
+                        <span class="field-error" id="reg-email-error"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-phone">Phone</label>
+                            <input type="tel" id="reg-phone" autocomplete="tel" placeholder="912 345 678" required>
+                            <span class="field-error" id="reg-phone-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-nif">NIF</label>
+                            <input type="text" id="reg-nif" inputmode="numeric" placeholder="9 digits" required>
+                            <span class="field-error" id="reg-nif-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-role">I want to register as</label>
+                        <select id="reg-role" required>
+                            <option value="" selected disabled>Choose a role…</option>
+                            <option value="client">Client</option>
+                            <option value="courier">Courier</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                        <span class="field-error" id="reg-role-error"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-password">Password</label>
+                            <input type="password" id="reg-password" autocomplete="new-password" required>
+                            <span class="field-error" id="reg-password-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-confirm">Confirm password</label>
+                            <input type="password" id="reg-confirm" autocomplete="new-password" required>
+                            <span class="field-error" id="reg-confirm-error"></span>
+                        </div>
+                    </div>
+
+                    <p class="form-note">Courier accounts are validated by staff and staff accounts by an administrator before the first login.</p>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="reg-terms" required>
+                            I accept the terms of use and the privacy policy.
+                        </label>
+                        <span class="field-error" id="reg-terms-error"></span>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Create account</button>
+                    <p class="switch-text">Already have an account? <a href="#login" data-switch="login">Login here</a></p>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
+    </footer>
+
+    <script src="login.js"></script>
 </body>
 </html>
