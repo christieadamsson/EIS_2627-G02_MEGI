@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer – PDP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Shared Navigation bar -->
+    <header class="navbar">
+        <a href="0_homepage.html" class="brand">
+            <img src="logo.jpeg" alt="PDP logo" class="brand-logo">
+            <div class="brand-text">
+                <h1>PDP</h1>
+                <p>Pigeon Delivery Parcel</p>
+            </div>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="0_homepage.html">Home</a></li>
+                <li><a href="2_customer.html" class="active">Customer</a></li>
+                <li><a href="3_courier.html">Courier</a></li>
+                <li><a href="5_staff.html">Staff</a></li>
+                <li><a href="4_admin.html">Admin</a></li>
+                <li><a href="6_team.html">Team</a></li>
+                <li><a href="#">Customer service</a></li>
+            </ul>
+        </nav>
+        <a href="1_login.html" class="btn-login">LOGIN</a>
+    </header>
+
+    <main>
+        <!-- Banner Header -->
+        <section class="team-banner">
+            <div class="banner-content">
+                <p class="team-label">CUSTOMER AREA</p>
+                <h2 class="team-heading">TRACK YOUR PARCEL</h2>
+                <p class="course-sub">Follow your parcel's delivery status.</p>
+            </div>
+        </section>
+
+        <!-- Main Customer Content -->
+        <div class="customer-section">
+            
+            <!-- Tabs (IDs added here!) -->
+            <div class="tab-group">
+                <button class="tab-btn active" id="tab-tracking-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    Tracking
+                </button>
+                <button class="tab-btn" id="tab-shipment-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    New shipment
+                </button>
+            </div>
+
+            <!-- VIEW 1: TRACKING VIEW -->
+            <div id="view-tracking">
+                <section class="tracking-section">
+                    <label for="tracking-input" class="input-label">Tracking number</label>
+                    <div class="search-box">
+                        <input type="text" id="tracking-input" placeholder="e.g. RR-1042" class="tracking-input">
+                        <button type="button" class="btn-track">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            TRACK PARCEL
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW 2: NEW SHIPMENT VIEW (Added missing section!) -->
+            <div id="view-shipment" style="display: none;">
+                <div class="shipment-grid">
+                    
+                    <!-- Left Form Side -->
+                    <div class="shipment-form-container">
+                        <h3 class="section-title">DELIVERY DETAILS</h3>
+                        
+                        <div class="form-group">
+                            <label class="input-label">Recipient name</label>
+                            <input type="text" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="input-label">Delivery address</label>
+                            <input type="text" class="form-input">
+                        </div>
+
+                        <h3 class="section-title mt-4">PARCEL DETAILS</h3>
+                        
+                        <p class="parcel-sub-text">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            </svg>
+                            Dimensions in centimetres · Weight in kilograms
+                        </p>
+
+                        <div class="dimensions-row">
+                            <div class="form-group">
+                                <label class="input-label">Length (cm)</label>
+                                <input type="number" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label">Width (cm)</label>
+                                <input type="number" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label">Height (cm)</label>
+                                <input type="number" class="form-input">
+                            </div>
+                        </div>
+
+                        <div class="form-group dimensions-row">
+                            <div>
+                                <label class="input-label">Weight (kg)</label>
+                                <input type="number" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Pricing Side -->
+                    <div class="pricing-card">
+                        <p class="pricing-title">SUGGESTED PRICE</p>
+                        <h2 class="price-dash">—</h2>
+                        <p class="price-sub">Final price is confirmed once your parcel is collected.</p>
+
+                        <div class="price-breakdown">
+                            <div class="price-row">
+                                <span>Base delivery</span>
+                                <span>€5.00</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Chargeable weight</span>
+                                <span>—</span>
+                            </div>
+                            <div class="price-row">
+                                <span>Rate per kg</span>
+                                <span>€1.50</span>
+                            </div>
+                        </div>
+
+                        <p class="formula-note">
+                            Based on the greater of actual weight or volumetric weight (length × width × height ÷ 5,000).
+                        </p>
+
+                        <button type="button" class="btn-create-shipment">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            </svg>
+                            CREATE SHIPMENT
+                        </button>
+
+                        <p class="footer-note">You can follow this parcel from your customer area as soon as it's collected.</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
+    </footer>
+
+    <!-- JavaScript for toggling tabs -->
+    <script>
+        const btnTracking = document.getElementById('tab-tracking-btn');
+        const btnShipment = document.getElementById('tab-shipment-btn');
+        const viewTracking = document.getElementById('view-tracking');
+        const viewShipment = document.getElementById('view-shipment');
+
+        btnTracking.addEventListener('click', () => {
+            btnTracking.classList.add('active');
+            btnShipment.classList.remove('active');
+            viewTracking.style.display = 'block';
+            viewShipment.style.display = 'none';
+        });
+
+        btnShipment.addEventListener('click', () => {
+            btnShipment.classList.add('active');
+            btnTracking.classList.remove('active');
+            viewTracking.style.display = 'none';
+            viewShipment.style.display = 'block';
+        });
+    </script>
+
+</body>
+</html>
