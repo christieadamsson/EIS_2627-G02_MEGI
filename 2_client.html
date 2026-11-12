@@ -3,36 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer – PDP</title>
+    <title>Client Area – PDP</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Leaflet CSS for Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-        <style>
-    #client-order-map {
-        height: 340px;
-        margin-top: 8px;
-        border: 1px solid #d5dde5;
-        border-radius: 6px;
-    }
+    
+    <style>
+        /* Orders View specific layout */
+        .orders-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
 
-    .coordinate-pair {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-    }
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-    .location-coordinates {
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 0 24px;
-    box-sizing: border-box;
-}
-</style>
+        .order-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #dbe4ee;
+            border-radius: 12px;
+        }
+
+        .order-info strong {
+            display: block;
+            color: #0f172a;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .order-info span {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .btn-view-status {
+            padding: 8px 16px;
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-view-status:hover {
+            background-color: #e2e8f0;
+        }
+
+        /* Map styling */
+        #client-order-map {
+            height: 340px;
+            margin-top: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #d5dde5;
+            border-radius: 12px;
+            z-index: 1; /* prevents map from overlapping navbar dropdowns */
+        }
+    </style>
 </head>
-
-
-
-
 
 <body>
 
@@ -60,287 +101,321 @@
     </header>
 
     <main>
-        <!-- Banner Header -->
+        <!-- Dynamic Banner Header -->
         <section class="team-banner">
             <div class="banner-content">
-                <p class="team-label">CUSTOMER AREA</p>
-                <h2 class="team-heading">TRACK YOUR PARCEL</h2>
-                <p class="course-sub">Follow your parcel's delivery status.</p>
+                <p class="team-label">CLIENT AREA</p>
+                <!-- This text updates dynamically via JavaScript based on the active tab -->
+                <h2 class="team-heading" id="banner-title">TRACK YOUR PARCEL</h2>
+                <p class="course-sub" id="banner-subtitle">Follow your parcel's delivery status.</p>
             </div>
         </section>
 
-        <!-- Main Customer Content -->
+        <!-- Main Content Section -->
         <div class="customer-section">
             
-            <!-- Tabs (IDs added here!) -->
+            <!-- 3-Button Tab Navigation -->
             <div class="tab-group">
                 <button class="tab-btn active" id="tab-tracking-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 6v6l4 2"></path>
-                    </svg>
-                    Tracking
+                        <circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path>
+                    </svg> Tracking
+                </button>
+                <button class="tab-btn" id="tab-orders-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>
+                    </svg> Orders
                 </button>
                 <button class="tab-btn" id="tab-shipment-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                    </svg>
-                    New shipment
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg> New shipment
                 </button>
             </div>
 
-            <!-- VIEW 1: TRACKING VIEW -->
+            <!-- VIEW 1: TRACKING -->
             <div id="view-tracking">
                 <section class="tracking-section">
                     <label for="tracking-input" class="input-label">Tracking number</label>
                     <div class="search-box">
                         <input type="text" id="tracking-input" placeholder="e.g. RR-1042" class="tracking-input">
-                        <button type="button" class="btn-track">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                            TRACK PARCEL
-                        </button>
+                        <button type="button" class="btn-track">TRACK PARCEL</button>
                     </div>
                 </section>
+
+                <section class="tracking-result" aria-label="Parcel tracking status">
+                    <h2 class="tracking-result-heading">IN TRANSIT</h2>
+                    <ol class="tracking-timeline">
+                        <li class="timeline-step is-complete">Received by PDP</li>
+                        <li class="timeline-step is-current" aria-current="step">In transit</li>
+                        <li class="timeline-step">Out for delivery</li>
+                        <li class="timeline-step">Delivered</li>
+                    </ol>
+                    <div class="tracking-details">
+                        <p>To Ana Silva · Rua Augusta 120, Lisboa · ETA Today 16:30</p>
+                        <p>From 38.7369, -9.1427 → To 38.7101, -9.1375</p>
+                    </div>
+</section>
+
             </div>
 
-            <!-- VIEW 2: NEW SHIPMENT VIEW (Added missing section!) -->
+            <!-- VIEW 2: ORDERS (History & Active) -->
+            <div id="view-orders" style="display: none;">
+                <div class="orders-grid">
+                    
+                    <!-- Active Orders Column -->
+                    <div>
+                        <h3 class="section-title">ACTIVE ORDERS</h3>
+                        <div class="orders-list">
+                            <div class="order-card">
+                                <div class="order-info">
+                                    <strong>Ana Silva — In transit</strong>
+                                    <span>Rua Augusta 120, Lisboa<br>38.7369, -9.1427 → 38.7101, -9.1375</span>
+                                </div>
+                                <button class="btn-view-status">View status</button>
+                            </div>
+                            <div class="order-card">
+                                <div class="order-info">
+                                    <strong>Rita Alves — Out for delivery</strong>
+                                    <span>Rua da Prata 33, Lisboa<br>38.7369, -9.1427 → 38.7098, -9.1361</span>
+                                </div>
+                                <button class="btn-view-status">View status</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order History Column -->
+                    <div>
+                        <h3 class="section-title">ORDER HISTORY</h3>
+                        <div class="orders-list">
+                            <div class="order-card">
+                                <div class="order-info">
+                                    <strong>João Costa — Delivered</strong>
+                                    <span>Av. da Liberdade 45, Lisboa<br>38.7369, -9.1427 → 38.7190, -9.1449</span>
+                                </div>
+                                <button class="btn-view-status">View status</button>
+                            </div>
+                            <div class="order-card">
+                                <div class="order-info">
+                                    <strong>Pedro Lopes — Delivered</strong>
+                                    <span>Praça do Comércio 2, Lisboa<br>38.7369, -9.1427 → 38.7075, -9.1364</span>
+                                </div>
+                                <button class="btn-view-status">View status</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- VIEW 3: NEW SHIPMENT (Form + Map) -->
             <div id="view-shipment" style="display: none;">
                 <div class="shipment-grid">
                     
                     <!-- Left Form Side -->
                     <div class="shipment-form-container">
-                        <h3 class="section-title">DELIVERY DETAILS</h3>
                         
+                        <!-- 1. Delivery Details -->
+                        <h3 class="section-title">DELIVERY DETAILS</h3>
                         <div class="form-group">
                             <label class="input-label">Recipient name</label>
                             <input type="text" class="form-input">
                         </div>
-
                         <div class="form-group">
                             <label class="input-label">Delivery address</label>
                             <input type="text" class="form-input">
                         </div>
 
+                        <!-- 2. Parcel Details -->
                         <h3 class="section-title mt-4">PARCEL DETAILS</h3>
-                        
                         <p class="parcel-sub-text">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2">
                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                             </svg>
                             Dimensions in centimetres · Weight in kilograms
                         </p>
-
                         <div class="dimensions-row">
-                            <div class="form-group">
-                                <label class="input-label">Length (cm)</label>
-                                <input type="number" class="form-input">
+                            <div class="form-group"><label class="input-label">Length (cm)</label><input type="number" class="form-input"></div>
+                            <div class="form-group"><label class="input-label">Width (cm)</label><input type="number" class="form-input"></div>
+                            <div class="form-group"><label class="input-label">Height (cm)</label><input type="number" class="form-input"></div>
+                        </div>
+                        <div class="form-group dimensions-row">
+                            <div><label class="input-label">Weight (kg)</label><input type="number" class="form-input"></div>
+                        </div>
+
+                        <!-- 3. GPS Details -->
+                        <div class="location-coordinates">
+                            <h3 class="section-title mt-4">LOCATION COORDINATES</h3>
+                            
+                            <label class="input-label" style="margin-top:12px;">Origin coordinates</label>
+                            <div class="dimensions-row">
+                                <div class="form-group">
+                                    <input id="origin-latitude" class="form-input" type="number" step="any" placeholder="Latitude">
+                                </div>
+                                <div class="form-group">
+                                    <input id="origin-longitude" class="form-input" type="number" step="any" placeholder="Longitude">
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label class="input-label">Width (cm)</label>
-                                <input type="number" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label class="input-label">Height (cm)</label>
-                                <input type="number" class="form-input">
+                            
+                            <label class="input-label" style="margin-top:12px;">Select origin on map</label>
+                            <!-- The Interactive Map Container -->
+                            <div id="client-order-map"></div>
+
+                            <label class="input-label" style="margin-top:24px;">Destination coordinates</label>
+                            <div class="dimensions-row">
+                                <div class="form-group">
+                                    <input id="destination-latitude" class="form-input" type="number" step="any" placeholder="Latitude">
+                                </div>
+                                <div class="form-group">
+                                    <input id="destination-longitude" class="form-input" type="number" step="any" placeholder="Longitude">
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-group dimensions-row">
-                            <div>
-                                <label class="input-label">Weight (kg)</label>
-                                <input type="number" class="form-input">
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Right Pricing Side -->
                     <div class="pricing-card">
-                        <p class="pricing-title">SUGGESTED PRICE</p>
-                        <h2 class="price-dash">—</h2>
-                        <p class="price-sub">Final price is confirmed once your parcel is collected.</p>
-
+                        <p class="pricing-title">ESTIMATED PRICE</p>
+                
                         <div class="price-breakdown">
-                            <div class="price-row">
-                                <span>Base delivery</span>
-                                <span>€5.00</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Chargeable weight</span>
-                                <span>—</span>
-                            </div>
-                            <div class="price-row">
-                                <span>Rate per kg</span>
-                                <span>€1.50</span>
-                            </div>
+                            <div class="price-row"><span>Base delivery</span><span>€5.00</span></div>
+                            <div class="price-row"><span>Chargeable weight</span><span>—</span></div>
+                            <div class="price-row"><span>Rate per kg</span><span>€1.50</span></div>
                         </div>
-
                         <p class="formula-note">
                             Based on the greater of actual weight or volumetric weight (length × width × height ÷ 5,000).
                         </p>
-
-                        <button type="button" class="btn-create-shipment">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                            </svg>
-                            CREATE SHIPMENT
-                        </button>
-
-                        <p class="footer-note">You can follow this parcel from your customer area as soon as it's collected.</p>
+                        <button type="button" class="btn-create-shipment">CREATE SHIPMENT</button>
                     </div>
 
                 </div>
             </div>
 
-        
-
-                    <div class="location-coordinates">
-                <h4>Origin coordinates</h4>
-                <div class="coordinate-pair">
-                    <div class="form-group">
-                        <label class="input-label" for="origin-latitude">Latitude</label>
-                        <input id="origin-latitude" class="form-input" type="number" step="any" value="41.1779">
-                    </div>
-                    <div class="form-group">
-                        <label class="input-label" for="origin-longitude">Longitude</label>
-                        <input id="origin-longitude" class="form-input" type="number" step="any" value="-8.5981">
-                    </div>
-                </div>
-                <label class="input-label" for="client-order-map">Select origin on map</label>
-                <div id="client-order-map" role="application" aria-label="Map for selecting the order origin"></div>
-            </div>
-
-                    <div class="location-coordinates">
-                        <h4>Destination coordinates</h4>
-                        <div class="coordinate-pair">
-                            <div class="form-group">
-                                <label class="input-label" for="destination-latitude">Latitude</label>
-                                <input id="destination-latitude" class="form-input" type="number" step="any">
-                            </div>
-                            <div class="form-group">
-                                <label class="input-label" for="destination-longitude">Longitude</label>
-                                <input id="destination-longitude" class="form-input" type="number" step="any">
-                            </div>
-                        </div>
-                    </div>
-
-    </div>            
+        </div>
     </main>
 
     <!-- Footer -->
-    <footer>
-        <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
+    <footer class="footer-large">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <img src="logo.jpeg" alt="PDP logo" class="brand-logo">
+                <div><h3>PDP</h3><p>Pigeon Delivery Parcel</p></div>
+            </div>
+            <p>© 2026 PDP. Fast. Tracked. Delivered.</p>
+        </div>
     </footer>
 
-    <!-- JavaScript for toggling tabs -->
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    
+    <!-- Tab & Map Logic -->
     <script>
-    const btnTracking = document.getElementById('tab-tracking-btn');
-    const btnShipment = document.getElementById('tab-shipment-btn');
-    const viewTracking = document.getElementById('view-tracking');
-    const viewShipment = document.getElementById('view-shipment');
-    const originLatitude = document.getElementById('origin-latitude');
-    const originLongitude = document.getElementById('origin-longitude');
-    const destinationLatitude = document.getElementById('destination-latitude');
-    const destinationLongitude = document.getElementById('destination-longitude');
-    let orderMap;
-    let originMarker;
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // UI Elements
+            const btnTracking = document.getElementById('tab-tracking-btn');
+            const btnOrders = document.getElementById('tab-orders-btn');
+            const btnShipment = document.getElementById('tab-shipment-btn');
+            
+            const viewTracking = document.getElementById('view-tracking');
+            const viewOrders = document.getElementById('view-orders');
+            const viewShipment = document.getElementById('view-shipment');
+            
+            const bannerTitle = document.getElementById('banner-title');
+            const bannerSubtitle = document.getElementById('banner-subtitle');
+            
+            // Map Variables
+            const originLatitude = document.getElementById('origin-latitude');
+            const originLongitude = document.getElementById('origin-longitude');
+            let orderMap;
+            let originMarker;
 
-    function saveOrigin(lat, lng) {
-        originLatitude.value = lat.toFixed(6);
-        originLongitude.value = lng.toFixed(6);
-        localStorage.setItem('orderOriginCoordinates', JSON.stringify({ lat, lng }));
-    }
-    function saveDestinationCoordinates() {
-    const lat = Number(destinationLatitude.value);
-    const lng = Number(destinationLongitude.value);
-
-    if (!destinationLatitude.value || !destinationLongitude.value ||
-        !Number.isFinite(lat) || !Number.isFinite(lng) ||
-        Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-        return;
-    }
-
-    localStorage.setItem('orderDestinationCoordinates', JSON.stringify({ lat, lng }));
-}
-    function initializeOrderMap() {
-        if (!window.L) return;
-        if (orderMap) {
-            orderMap.invalidateSize();
-            return;
-        }
-
-        let origin = { lat: 41.1779, lng: -8.5981 };
-        try {
-            const saved = JSON.parse(localStorage.getItem('orderOriginCoordinates'));
-            if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng)) {
-                origin = saved;
+            // --- TAB SWITCHING LOGIC ---
+            function switchTab(activeBtn, activeView, title, subtitle) {
+                // Reset all buttons & hide all views
+                [btnTracking, btnOrders, btnShipment].forEach(btn => btn.classList.remove('active'));
+                [viewTracking, viewOrders, viewShipment].forEach(view => view.style.display = 'none');
+                
+                // Activate selected
+                activeBtn.classList.add('active');
+                activeView.style.display = 'block';
+                
+                // Update Banner text dynamically
+                bannerTitle.textContent = title;
+                bannerSubtitle.textContent = subtitle;
             }
-        } catch {}
 
-        originLatitude.value = origin.lat;
-        originLongitude.value = origin.lng;
-
-        orderMap = L.map('client-order-map').setView([origin.lat, origin.lng], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(orderMap);
-
-        originMarker = L.marker([origin.lat, origin.lng], { draggable: true })
-            .addTo(orderMap)
-            .bindPopup('Order origin');
-
-        function updateOrigin(lat, lng) {
-            originMarker.setLatLng([lat, lng]);
-            saveOrigin(lat, lng);
-        }
-
-        orderMap.on('click', event => updateOrigin(event.latlng.lat, event.latlng.lng));
-        originMarker.on('dragend', event => {
-            const position = event.target.getLatLng();
-            updateOrigin(position.lat, position.lng);
-        });
-
-        [originLatitude, originLongitude].forEach(input => {
-            input.addEventListener('change', () => {
-                const lat = Number(originLatitude.value);
-                const lng = Number(originLongitude.value);
-                if (originLatitude.value && originLongitude.value &&
-                    Number.isFinite(lat) && Number.isFinite(lng) &&
-                    Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
-                    updateOrigin(lat, lng);
-                    orderMap.setView([lat, lng]);
-                }
+            btnTracking.addEventListener('click', () => {
+                switchTab(btnTracking, viewTracking, 'TRACK YOUR PARCEL', "Follow your parcel's delivery status.");
             });
+
+            btnOrders.addEventListener('click', () => {
+                switchTab(btnOrders, viewOrders, 'ORDERS', 'Everything you have sent with PDP.');
+            });
+
+            btnShipment.addEventListener('click', () => {
+                switchTab(btnShipment, viewShipment, 'NEW SHIPMENT', 'Register a new parcel.');
+                // Must initialize map AFTER the container is visible (display: block)
+                setTimeout(initializeOrderMap, 100); 
+            });
+
+            // --- MAP LOGIC ---
+            function saveOrigin(lat, lng) {
+                originLatitude.value = lat.toFixed(6);
+                originLongitude.value = lng.toFixed(6);
+            }
+
+            function initializeOrderMap() {
+                if (!window.L || orderMap) {
+                    if (orderMap) orderMap.invalidateSize(); // Fixes map rendering gray tiles
+                    return;
+                }
+
+                // Default Porto Coordinates
+                let origin = { lat: 41.1779, lng: -8.5981 };
+                originLatitude.value = origin.lat;
+                originLongitude.value = origin.lng;
+
+                // Load Leaflet Map
+                orderMap = L.map('client-order-map').setView([origin.lat, origin.lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(orderMap);
+
+                // Add draggable marker
+                originMarker = L.marker([origin.lat, origin.lng], { draggable: true })
+                    .addTo(orderMap)
+                    .bindPopup('Order origin');
+
+                function updateOrigin(lat, lng) {
+                    originMarker.setLatLng([lat, lng]);
+                    saveOrigin(lat, lng);
+                }
+
+                // Map Click Event
+                orderMap.on('click', event => updateOrigin(event.latlng.lat, event.latlng.lng));
+                
+                // Marker Drag Event
+                originMarker.on('dragend', event => {
+                    const position = event.target.getLatLng();
+                    updateOrigin(position.lat, position.lng);
+                });
+
+                // Manual Input Sync
+                [originLatitude, originLongitude].forEach(input => {
+                    input.addEventListener('change', () => {
+                        const lat = Number(originLatitude.value);
+                        const lng = Number(originLongitude.value);
+                        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+                            updateOrigin(lat, lng);
+                            orderMap.setView([lat, lng]);
+                        }
+                    });
+                });
+            }
+            
         });
-        [destinationLatitude, destinationLongitude].forEach(input => {
-            input.addEventListener('change', saveDestinationCoordinates);
-        });
-
-
-        saveOrigin(origin.lat, origin.lng);
-    }
-
-    btnTracking.addEventListener('click', () => {
-        btnTracking.classList.add('active');
-        btnShipment.classList.remove('active');
-        viewTracking.style.display = 'block';
-        viewShipment.style.display = 'none';
-    });
-
-    btnShipment.addEventListener('click', () => {
-        btnShipment.classList.add('active');
-        btnTracking.classList.remove('active');
-        viewTracking.style.display = 'none';
-        viewShipment.style.display = 'block';
-        initializeOrderMap();
-    });
-
-    document.addEventListener('DOMContentLoaded', initializeOrderMap);
-</script>
-
+    </script>
 </body>
 </html>

@@ -953,3 +953,87 @@ footer {
     background-color: #f1f5f9;
     border-color: #94a3b8;
 }
+
+
+
+
+
+
+
+
+
+
+
+.tracking-result {
+    margin-top: 26px;
+}
+
+.tracking-result-heading {
+    margin: 0 0 24px;
+    color: #17212b;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+}
+
+.tracking-timeline {
+    max-width: 475px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.timeline-step {
+    position: relative;
+    margin-bottom: 34px;
+    padding: 19px 18px;
+    border: 1px solid #d5e4eb;
+    border-radius: 12px;
+    background: #fff;
+    color: #58707d;
+    font-weight: 700;
+}
+
+.timeline-step:not(:last-child)::after {
+    position: absolute;
+    bottom: -31px;
+    left: 50%;
+    color: #607986;
+    content: '↓';
+    font-size: 24px;
+    font-weight: 400;
+    transform: translateX(-50%);
+}
+
+.timeline-step.is-complete {
+    border-color: #b8e4f2;
+    background: #c9effb;
+    color: #075277;
+}
+
+.timeline-step.is-current {
+    border-color: #67c8eb;
+    background: #67c8eb;
+    color: #073b55;
+}
+
+.tracking-details {
+    max-width: 720px;
+    color: #607986;
+    font-size: 14px;
+}
+
+.tracking-details p {
+    margin: 0 0 8px;
+}
+
+@media (max-width: 600px) {
+    .tracking-result-heading {
+        font-size: 28px;
+    }
+
+    .timeline-step {
+        padding: 16px;
+    }
+}
+
+
