@@ -5,7 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer – PDP</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+        <style>
+    #client-order-map {
+        height: 340px;
+        margin-top: 8px;
+        border: 1px solid #d5dde5;
+        border-radius: 6px;
+    }
+
+    .coordinate-pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .location-coordinates {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 24px;
+    box-sizing: border-box;
+}
+</style>
 </head>
+
+
+
+
+
 <body>
 
     <!-- Shared Navigation bar -->
@@ -20,12 +48,12 @@
         <nav>
             <ul class="nav-links">
                 <li><a href="0_homepage.html">Home</a></li>
-                <li><a href="2_customer.html" class="active">Customer</a></li>
+                <li><a href="2_client.html" class="active">Client</a></li>
                 <li><a href="3_courier.html">Courier</a></li>
                 <li><a href="5_staff.html">Staff</a></li>
                 <li><a href="4_admin.html">Admin</a></li>
                 <li><a href="6_team.html">Team</a></li>
-                <li><a href="#">Customer service</a></li>
+                <li><a href="7_customerservice.html">Customer service</a></li>
             </ul>
         </nav>
         <a href="1_login.html" class="btn-login">LOGIN</a>
@@ -168,7 +196,39 @@
                 </div>
             </div>
 
-        </div>
+        
+
+                    <div class="location-coordinates">
+                <h4>Origin coordinates</h4>
+                <div class="coordinate-pair">
+                    <div class="form-group">
+                        <label class="input-label" for="origin-latitude">Latitude</label>
+                        <input id="origin-latitude" class="form-input" type="number" step="any" value="41.1779">
+                    </div>
+                    <div class="form-group">
+                        <label class="input-label" for="origin-longitude">Longitude</label>
+                        <input id="origin-longitude" class="form-input" type="number" step="any" value="-8.5981">
+                    </div>
+                </div>
+                <label class="input-label" for="client-order-map">Select origin on map</label>
+                <div id="client-order-map" role="application" aria-label="Map for selecting the order origin"></div>
+            </div>
+
+                    <div class="location-coordinates">
+                        <h4>Destination coordinates</h4>
+                        <div class="coordinate-pair">
+                            <div class="form-group">
+                                <label class="input-label" for="destination-latitude">Latitude</label>
+                                <input id="destination-latitude" class="form-input" type="number" step="any">
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label" for="destination-longitude">Longitude</label>
+                                <input id="destination-longitude" class="form-input" type="number" step="any">
+                            </div>
+                        </div>
+                    </div>
+
+    </div>            
     </main>
 
     <!-- Footer -->
@@ -178,25 +238,109 @@
 
     <!-- JavaScript for toggling tabs -->
     <script>
-        const btnTracking = document.getElementById('tab-tracking-btn');
-        const btnShipment = document.getElementById('tab-shipment-btn');
-        const viewTracking = document.getElementById('view-tracking');
-        const viewShipment = document.getElementById('view-shipment');
+    const btnTracking = document.getElementById('tab-tracking-btn');
+    const btnShipment = document.getElementById('tab-shipment-btn');
+    const viewTracking = document.getElementById('view-tracking');
+    const viewShipment = document.getElementById('view-shipment');
+    const originLatitude = document.getElementById('origin-latitude');
+    const originLongitude = document.getElementById('origin-longitude');
+    const destinationLatitude = document.getElementById('destination-latitude');
+    const destinationLongitude = document.getElementById('destination-longitude');
+    let orderMap;
+    let originMarker;
 
-        btnTracking.addEventListener('click', () => {
-            btnTracking.classList.add('active');
-            btnShipment.classList.remove('active');
-            viewTracking.style.display = 'block';
-            viewShipment.style.display = 'none';
+    function saveOrigin(lat, lng) {
+        originLatitude.value = lat.toFixed(6);
+        originLongitude.value = lng.toFixed(6);
+        localStorage.setItem('orderOriginCoordinates', JSON.stringify({ lat, lng }));
+    }
+    function saveDestinationCoordinates() {
+    const lat = Number(destinationLatitude.value);
+    const lng = Number(destinationLongitude.value);
+
+    if (!destinationLatitude.value || !destinationLongitude.value ||
+        !Number.isFinite(lat) || !Number.isFinite(lng) ||
+        Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+        return;
+    }
+
+    localStorage.setItem('orderDestinationCoordinates', JSON.stringify({ lat, lng }));
+}
+    function initializeOrderMap() {
+        if (!window.L) return;
+        if (orderMap) {
+            orderMap.invalidateSize();
+            return;
+        }
+
+        let origin = { lat: 41.1779, lng: -8.5981 };
+        try {
+            const saved = JSON.parse(localStorage.getItem('orderOriginCoordinates'));
+            if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lng)) {
+                origin = saved;
+            }
+        } catch {}
+
+        originLatitude.value = origin.lat;
+        originLongitude.value = origin.lng;
+
+        orderMap = L.map('client-order-map').setView([origin.lat, origin.lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(orderMap);
+
+        originMarker = L.marker([origin.lat, origin.lng], { draggable: true })
+            .addTo(orderMap)
+            .bindPopup('Order origin');
+
+        function updateOrigin(lat, lng) {
+            originMarker.setLatLng([lat, lng]);
+            saveOrigin(lat, lng);
+        }
+
+        orderMap.on('click', event => updateOrigin(event.latlng.lat, event.latlng.lng));
+        originMarker.on('dragend', event => {
+            const position = event.target.getLatLng();
+            updateOrigin(position.lat, position.lng);
         });
 
-        btnShipment.addEventListener('click', () => {
-            btnShipment.classList.add('active');
-            btnTracking.classList.remove('active');
-            viewTracking.style.display = 'none';
-            viewShipment.style.display = 'block';
+        [originLatitude, originLongitude].forEach(input => {
+            input.addEventListener('change', () => {
+                const lat = Number(originLatitude.value);
+                const lng = Number(originLongitude.value);
+                if (originLatitude.value && originLongitude.value &&
+                    Number.isFinite(lat) && Number.isFinite(lng) &&
+                    Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+                    updateOrigin(lat, lng);
+                    orderMap.setView([lat, lng]);
+                }
+            });
         });
-    </script>
+        [destinationLatitude, destinationLongitude].forEach(input => {
+            input.addEventListener('change', saveDestinationCoordinates);
+        });
+
+
+        saveOrigin(origin.lat, origin.lng);
+    }
+
+    btnTracking.addEventListener('click', () => {
+        btnTracking.classList.add('active');
+        btnShipment.classList.remove('active');
+        viewTracking.style.display = 'block';
+        viewShipment.style.display = 'none';
+    });
+
+    btnShipment.addEventListener('click', () => {
+        btnShipment.classList.add('active');
+        btnTracking.classList.remove('active');
+        viewTracking.style.display = 'none';
+        viewShipment.style.display = 'block';
+        initializeOrderMap();
+    });
+
+    document.addEventListener('DOMContentLoaded', initializeOrderMap);
+</script>
 
 </body>
 </html>
