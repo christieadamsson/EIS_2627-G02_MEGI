@@ -81,7 +81,15 @@ container.innerHTML = users.map(user => {
   `;
 }).join('');
 }
-
+// Couriers that may get orders: the demo courier + couriers approved by staff
+function getActiveCouriers() {
+  let registered = [];
+  try { registered = JSON.parse(localStorage.getItem("registeredUsers")) || []; } catch (e) {}
+  const approved = registered
+    .filter(u => u.role === "courier" && u.status === "active")
+    .map(u => u.name);
+  return ["Miguel Santos", "Sofia", "João"].concat(approved);
+}
 function renderDispatchTable() {
 const tbody = document.getElementById("dispatch-table-body");
 if (!tbody) return;

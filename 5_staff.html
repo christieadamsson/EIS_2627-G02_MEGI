@@ -59,6 +59,39 @@
             <div class="stat-value">4</div>
           </div>
         </div>
+                <!-- Alerts: expired / expiring / updated vehicle documents -->
+        <section class="card">
+          <h2>Document Alerts</h2>
+          <div id="vehicle-alerts"></div>
+        </section>
+
+        <!-- Pending courier accounts (from the register form on 1_login.html) -->
+        <section class="card">
+          <h2>Pending Courier Approvals <span class="count-pill" id="pending-couriers-count">0</span></h2>
+          <ul class="user-list" id="pending-couriers"></ul>
+        </section>
+
+        <!-- Vehicles registered by couriers -->
+        <section class="card">
+          <h2>Vehicle Approvals <span class="count-pill" id="pending-vehicles-count">0</span></h2>
+          <div class="table-responsive">
+            <table class="dispatch-table vehicle-table">
+              <thead>
+                <tr>
+                  <th>Plate</th>
+                  <th>Vehicle</th>
+                  <th>Courier</th>
+                  <th>Insurance</th>
+                  <th>Inspection</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vehicle-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
       
         <!-- 2. Order- och Dispatch-statts -->
         <div class="card">
@@ -94,6 +127,7 @@
             </form>
         </section>
         <script src="scripts.js" defer></script>
+        <script src="staff.js" defer></script>
 </main> 
 
 <footer>
