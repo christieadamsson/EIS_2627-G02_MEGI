@@ -11,7 +11,7 @@
     <!-- Shared Navigation bar -->
     <header class="navbar">
         <a href="0_homepage.html" class="brand">
-            <img src="logo.jpeg" alt="PDP logo" class="brand-logo">
+            <img src="pigeon_logo.png" alt="PDP logo" class="brand-logo">
             <div class="brand-text">
                 <h1>PDP</h1>
                 <p>Pigeon Delivery Parcel</p>
@@ -25,7 +25,7 @@
                 <li><a href="5_staff.html">Staff</a></li>
                 <li><a href="4_admin.html">Admin</a></li>
                 <li><a href="6_team.html">Team</a></li>
-                <li><a href="7_customer_service.html" class="active">Customer service</a></li>
+                <li><a href="7_customerservice.html" class="active">Customer service</a></li>
             </ul>
         </nav>
         <a href="1_login.html" class="btn-login">LOGIN</a>
@@ -74,6 +74,37 @@
 
             </div>
 
+            <!-- Contact form -->
+            <section class="cs-card cs-form-card">
+                <h3 class="cs-card-title">SEND US A MESSAGE</h3>
+                <form id="contact-form" novalidate>
+                    <div class="dimensions-row">
+                        <div class="form-group">
+                            <label class="input-label" for="contact-name">Name</label>
+                            <input type="text" id="contact-name" class="form-input" autocomplete="name">
+                            <span class="field-error" id="contact-name-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="input-label" for="contact-email">Email</label>
+                            <input type="email" id="contact-email" class="form-input" autocomplete="email">
+                            <span class="field-error" id="contact-email-error"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="input-label" for="contact-tracking">Tracking number (optional)</label>
+                        <input type="text" id="contact-tracking" class="form-input" placeholder="e.g. RR-1042">
+                        <span class="field-error" id="contact-tracking-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="input-label" for="contact-message">Message</label>
+                        <textarea id="contact-message" class="form-input cs-textarea" rows="5"></textarea>
+                        <span class="field-error" id="contact-message-error"></span>
+                    </div>
+                    <div id="contact-msg" class="form-msg" role="status" hidden></div>
+                    <button type="submit" class="btn-create-shipment cs-submit">SEND MESSAGE</button>
+                </form>
+            </section>
+
             <!-- Divider -->
             <hr class="cs-divider">
 
@@ -95,9 +126,61 @@
         </div>
     </main>
 
-     <footer>
+    <footer>
         <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
     </footer>
+
+    <script src="data.js"></script>
+    <script>
+        // Contact form validation
+        (function () {
+            var form = document.getElementById("contact-form");
+            var msg = document.getElementById("contact-msg");
+            var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            function setError(input, text) {
+                input.classList.add("input-error");
+                document.getElementById(input.id + "-error").textContent = text;
+            }
+
+            function clearError(input) {
+                input.classList.remove("input-error");
+                document.getElementById(input.id + "-error").textContent = "";
+            }
+
+            form.querySelectorAll("input, textarea").forEach(function (input) {
+                input.addEventListener("input", function () { clearError(input); });
+            });
+
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                var name = document.getElementById("contact-name");
+                var email = document.getElementById("contact-email");
+                var tracking = document.getElementById("contact-tracking");
+                var text = document.getElementById("contact-message");
+                var valid = true;
+                [name, email, tracking, text].forEach(clearError);
+
+                if (name.value.trim() === "") { setError(name, "Please enter your name."); valid = false; }
+                if (email.value.trim() === "") { setError(email, "Please enter your email."); valid = false; }
+                else if (!emailPattern.test(email.value.trim())) { setError(email, "Please enter a valid email address."); valid = false; }
+                if (tracking.value.trim() !== "" && !PDP_TRACKING_PATTERN.test(tracking.value.trim())) {
+                    setError(tracking, "Tracking numbers look like RR-1042."); valid = false;
+                }
+                if (text.value.trim().length < 10) { setError(text, "Please write a message of at least 10 characters."); valid = false; }
+
+                msg.hidden = false;
+                if (!valid) {
+                    msg.className = "form-msg msg-error";
+                    msg.textContent = "Please fix the highlighted fields.";
+                    return;
+                }
+                msg.className = "form-msg msg-success";
+                msg.textContent = "Thank you, " + name.value.trim() + "! We will answer within one working day.";
+                form.reset();
+            });
+        })();
+    </script>
 
 </body>
 </html>

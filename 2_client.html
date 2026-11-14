@@ -63,6 +63,91 @@
             background-color: #e2e8f0;
         }
 
+        .order-info .status-badge-inline {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .status-badge-inline.st-progress  { background-color: #c9eefc; color: #0f172a; }
+        .status-badge-inline.st-completed { background-color: #dcfce7; color: #15803d; }
+        .status-badge-inline.st-cancelled { background-color: #fee2e2; color: #b91c1c; }
+
+        .empty-text {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .form-select {
+            appearance: auto;
+        }
+
+        .map-mode {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+
+        .map-mode label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .price-row.total {
+            border-top: 1px solid #bae6fd;
+            padding-top: 10px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .tracking-result[hidden] {
+            display: none;
+        }
+
+        .timeline-step.is-cancelled {
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .tracking-hint {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .field-error {
+            display: block;
+            min-height: 16px;
+            margin-top: 4px;
+            color: #b91c1c;
+            font-size: 12px;
+        }
+
+        .form-msg {
+            margin: 12px 0;
+            padding: 10px 14px;
+            border-radius: 6px;
+        }
+
+        .form-msg[hidden] {
+            display: none;
+        }
+
+        /* Destination marker: same Leaflet pin, recoloured */
+        .destination-marker {
+            filter: hue-rotate(150deg) saturate(1.6);
+        }
+
         /* Map styling */
         #client-order-map {
             height: 340px;
@@ -80,7 +165,7 @@
     <!-- Shared Navigation bar -->
     <header class="navbar">
         <a href="0_homepage.html" class="brand">
-            <img src="logo.jpeg" alt="PDP logo" class="brand-logo">
+            <img src="pigeon_logo.png" alt="PDP logo" class="brand-logo">
             <div class="brand-text">
                 <h1>PDP</h1>
                 <p>Pigeon Delivery Parcel</p>
@@ -136,73 +221,39 @@
             <!-- VIEW 1: TRACKING -->
             <div id="view-tracking">
                 <section class="tracking-section">
-                    <label for="tracking-input" class="input-label">Tracking number</label>
-                    <div class="search-box">
-                        <input type="text" id="tracking-input" placeholder="e.g. RR-1042" class="tracking-input">
-                        <button type="button" class="btn-track">TRACK PARCEL</button>
-                    </div>
+                    <form id="tracking-form" novalidate>
+                        <label for="tracking-input" class="input-label">Tracking number</label>
+                        <div class="search-box">
+                            <input type="text" id="tracking-input" placeholder="e.g. RR-1042" class="tracking-input">
+                            <button type="submit" class="btn-track">TRACK PARCEL</button>
+                        </div>
+                        <span class="field-error" id="tracking-input-error"></span>
+                        <p class="tracking-hint">Sample numbers to try: RR-1042, RR-1040, RR-1041</p>
+                    </form>
                 </section>
 
-                <section class="tracking-result" aria-label="Parcel tracking status">
-                    <h2 class="tracking-result-heading">IN TRANSIT</h2>
-                    <ol class="tracking-timeline">
-                        <li class="timeline-step is-complete">Received by PDP</li>
-                        <li class="timeline-step is-current" aria-current="step">In transit</li>
-                        <li class="timeline-step">Out for delivery</li>
-                        <li class="timeline-step">Delivered</li>
-                    </ol>
-                    <div class="tracking-details">
-                        <p>To Ana Silva · Rua Augusta 120, Lisboa · ETA Today 16:30</p>
-                        <p>From 38.7369, -9.1427 → To 38.7101, -9.1375</p>
-                    </div>
-</section>
-
+                <!-- Filled by client.js -->
+                <section class="tracking-result" id="tracking-result" aria-label="Parcel tracking status" aria-live="polite" hidden>
+                    <h2 class="tracking-result-heading" id="tracking-heading"></h2>
+                    <ol class="tracking-timeline" id="tracking-timeline"></ol>
+                    <div class="tracking-details" id="tracking-details"></div>
+                </section>
             </div>
 
             <!-- VIEW 2: ORDERS (History & Active) -->
             <div id="view-orders" style="display: none;">
                 <div class="orders-grid">
-                    
+
                     <!-- Active Orders Column -->
                     <div>
                         <h3 class="section-title">ACTIVE ORDERS</h3>
-                        <div class="orders-list">
-                            <div class="order-card">
-                                <div class="order-info">
-                                    <strong>Ana Silva — In transit</strong>
-                                    <span>Rua Augusta 120, Lisboa<br>38.7369, -9.1427 → 38.7101, -9.1375</span>
-                                </div>
-                                <button class="btn-view-status">View status</button>
-                            </div>
-                            <div class="order-card">
-                                <div class="order-info">
-                                    <strong>Rita Alves — Out for delivery</strong>
-                                    <span>Rua da Prata 33, Lisboa<br>38.7369, -9.1427 → 38.7098, -9.1361</span>
-                                </div>
-                                <button class="btn-view-status">View status</button>
-                            </div>
-                        </div>
+                        <div class="orders-list" id="active-orders"></div>
                     </div>
 
                     <!-- Order History Column -->
                     <div>
                         <h3 class="section-title">ORDER HISTORY</h3>
-                        <div class="orders-list">
-                            <div class="order-card">
-                                <div class="order-info">
-                                    <strong>João Costa — Delivered</strong>
-                                    <span>Av. da Liberdade 45, Lisboa<br>38.7369, -9.1427 → 38.7190, -9.1449</span>
-                                </div>
-                                <button class="btn-view-status">View status</button>
-                            </div>
-                            <div class="order-card">
-                                <div class="order-info">
-                                    <strong>Pedro Lopes — Delivered</strong>
-                                    <span>Praça do Comércio 2, Lisboa<br>38.7369, -9.1427 → 38.7075, -9.1364</span>
-                                </div>
-                                <button class="btn-view-status">View status</button>
-                            </div>
-                        </div>
+                        <div class="orders-list" id="history-orders"></div>
                     </div>
 
                 </div>
@@ -210,24 +261,46 @@
 
             <!-- VIEW 3: NEW SHIPMENT (Form + Map) -->
             <div id="view-shipment" style="display: none;">
-                <div class="shipment-grid">
-                    
+                <form id="shipment-form" class="shipment-grid" novalidate>
+
                     <!-- Left Form Side -->
                     <div class="shipment-form-container">
-                        
+
                         <!-- 1. Delivery Details -->
                         <h3 class="section-title">DELIVERY DETAILS</h3>
                         <div class="form-group">
-                            <label class="input-label">Recipient name</label>
-                            <input type="text" class="form-input">
+                            <label class="input-label" for="recipient-name">Recipient name</label>
+                            <input type="text" id="recipient-name" class="form-input" autocomplete="name">
+                            <span class="field-error" id="recipient-name-error"></span>
                         </div>
                         <div class="form-group">
-                            <label class="input-label">Delivery address</label>
-                            <input type="text" class="form-input">
+                            <label class="input-label" for="delivery-address">Delivery address</label>
+                            <input type="text" id="delivery-address" class="form-input" placeholder="Street, number, city">
+                            <span class="field-error" id="delivery-address-error"></span>
                         </div>
 
-                        <!-- 2. Parcel Details -->
-                        <h3 class="section-title mt-4">PARCEL DETAILS</h3>
+                        <!-- 2. Product Details -->
+                        <h3 class="section-title mt-4">PRODUCT DETAILS</h3>
+                        <div class="dimensions-row">
+                            <div class="form-group">
+                                <label class="input-label" for="product-description">Description</label>
+                                <input type="text" id="product-description" class="form-input" placeholder="e.g. Shoe box">
+                                <span class="field-error" id="product-description-error"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label" for="product-category">Category</label>
+                                <select id="product-category" class="form-input form-select">
+                                    <option value="">Choose…</option>
+                                    <option>Documents</option>
+                                    <option>Electronics</option>
+                                    <option>Clothing</option>
+                                    <option>Food</option>
+                                    <option>Fragile</option>
+                                    <option>Other</option>
+                                </select>
+                                <span class="field-error" id="product-category-error"></span>
+                            </div>
+                        </div>
                         <p class="parcel-sub-text">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2">
                                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
@@ -235,41 +308,49 @@
                             Dimensions in centimetres · Weight in kilograms
                         </p>
                         <div class="dimensions-row">
-                            <div class="form-group"><label class="input-label">Length (cm)</label><input type="number" class="form-input"></div>
-                            <div class="form-group"><label class="input-label">Width (cm)</label><input type="number" class="form-input"></div>
-                            <div class="form-group"><label class="input-label">Height (cm)</label><input type="number" class="form-input"></div>
+                            <div class="form-group"><label class="input-label" for="parcel-length">Length (cm)</label><input type="number" id="parcel-length" class="form-input" min="1" step="any"><span class="field-error" id="parcel-length-error"></span></div>
+                            <div class="form-group"><label class="input-label" for="parcel-width">Width (cm)</label><input type="number" id="parcel-width" class="form-input" min="1" step="any"><span class="field-error" id="parcel-width-error"></span></div>
+                            <div class="form-group"><label class="input-label" for="parcel-height">Height (cm)</label><input type="number" id="parcel-height" class="form-input" min="1" step="any"><span class="field-error" id="parcel-height-error"></span></div>
                         </div>
                         <div class="form-group dimensions-row">
-                            <div><label class="input-label">Weight (kg)</label><input type="number" class="form-input"></div>
+                            <div><label class="input-label" for="parcel-weight">Weight (kg)</label><input type="number" id="parcel-weight" class="form-input" min="0.1" step="any"><span class="field-error" id="parcel-weight-error"></span></div>
                         </div>
 
                         <!-- 3. GPS Details -->
                         <div class="location-coordinates">
                             <h3 class="section-title mt-4">LOCATION COORDINATES</h3>
-                            
+
                             <label class="input-label" style="margin-top:12px;">Origin coordinates</label>
                             <div class="dimensions-row">
                                 <div class="form-group">
-                                    <input id="origin-latitude" class="form-input" type="number" step="any" placeholder="Latitude">
+                                    <input id="origin-latitude" class="form-input" type="number" step="any" placeholder="Latitude" aria-label="Origin latitude">
+                                    <span class="field-error" id="origin-latitude-error"></span>
                                 </div>
                                 <div class="form-group">
-                                    <input id="origin-longitude" class="form-input" type="number" step="any" placeholder="Longitude">
+                                    <input id="origin-longitude" class="form-input" type="number" step="any" placeholder="Longitude" aria-label="Origin longitude">
+                                    <span class="field-error" id="origin-longitude-error"></span>
                                 </div>
                             </div>
-                            
-                            <label class="input-label" style="margin-top:12px;">Select origin on map</label>
-                            <!-- The Interactive Map Container -->
-                            <div id="client-order-map"></div>
 
-                            <label class="input-label" style="margin-top:24px;">Destination coordinates</label>
+                            <label class="input-label" style="margin-top:12px;">Destination coordinates</label>
                             <div class="dimensions-row">
                                 <div class="form-group">
-                                    <input id="destination-latitude" class="form-input" type="number" step="any" placeholder="Latitude">
+                                    <input id="destination-latitude" class="form-input" type="number" step="any" placeholder="Latitude" aria-label="Destination latitude">
+                                    <span class="field-error" id="destination-latitude-error"></span>
                                 </div>
                                 <div class="form-group">
-                                    <input id="destination-longitude" class="form-input" type="number" step="any" placeholder="Longitude">
+                                    <input id="destination-longitude" class="form-input" type="number" step="any" placeholder="Longitude" aria-label="Destination longitude">
+                                    <span class="field-error" id="destination-longitude-error"></span>
                                 </div>
                             </div>
+
+                            <label class="input-label" style="margin-top:12px;">Click the map to set</label>
+                            <div class="map-mode">
+                                <label><input type="radio" name="map-mode" value="origin" checked> Origin</label>
+                                <label><input type="radio" name="map-mode" value="destination"> Destination</label>
+                            </div>
+                            <!-- The Interactive Map Container -->
+                            <div id="client-order-map" aria-label="Map to choose origin and destination"></div>
                         </div>
 
                     </div>
@@ -277,145 +358,35 @@
                     <!-- Right Pricing Side -->
                     <div class="pricing-card">
                         <p class="pricing-title">ESTIMATED PRICE</p>
-                
+
                         <div class="price-breakdown">
                             <div class="price-row"><span>Base delivery</span><span>€5.00</span></div>
-                            <div class="price-row"><span>Chargeable weight</span><span>—</span></div>
+                            <div class="price-row"><span>Chargeable weight</span><span id="price-weight">—</span></div>
                             <div class="price-row"><span>Rate per kg</span><span>€1.50</span></div>
+                            <div class="price-row"><span>Distance (straight line)</span><span id="price-distance">—</span></div>
+                            <div class="price-row total"><span>Total</span><span id="price-total">—</span></div>
                         </div>
                         <p class="formula-note">
                             Based on the greater of actual weight or volumetric weight (length × width × height ÷ 5,000).
                         </p>
-                        <button type="button" class="btn-create-shipment">CREATE SHIPMENT</button>
+                        <div id="shipment-msg" class="form-msg" role="alert" hidden></div>
+                        <button type="submit" class="btn-create-shipment">CREATE SHIPMENT</button>
                     </div>
 
-                </div>
+                </form>
             </div>
 
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer-large">
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <img src="logo.jpeg" alt="PDP logo" class="brand-logo">
-                <div><h3>PDP</h3><p>Pigeon Delivery Parcel</p></div>
-            </div>
-            <p>© 2026 PDP. Fast. Tracked. Delivered.</p>
-        </div>
+    <footer>
+        <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
     </footer>
 
     <!-- Leaflet JS for Map -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-    
-    <!-- Tab & Map Logic -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            
-            // UI Elements
-            const btnTracking = document.getElementById('tab-tracking-btn');
-            const btnOrders = document.getElementById('tab-orders-btn');
-            const btnShipment = document.getElementById('tab-shipment-btn');
-            
-            const viewTracking = document.getElementById('view-tracking');
-            const viewOrders = document.getElementById('view-orders');
-            const viewShipment = document.getElementById('view-shipment');
-            
-            const bannerTitle = document.getElementById('banner-title');
-            const bannerSubtitle = document.getElementById('banner-subtitle');
-            
-            // Map Variables
-            const originLatitude = document.getElementById('origin-latitude');
-            const originLongitude = document.getElementById('origin-longitude');
-            let orderMap;
-            let originMarker;
-
-            // --- TAB SWITCHING LOGIC ---
-            function switchTab(activeBtn, activeView, title, subtitle) {
-                // Reset all buttons & hide all views
-                [btnTracking, btnOrders, btnShipment].forEach(btn => btn.classList.remove('active'));
-                [viewTracking, viewOrders, viewShipment].forEach(view => view.style.display = 'none');
-                
-                // Activate selected
-                activeBtn.classList.add('active');
-                activeView.style.display = 'block';
-                
-                // Update Banner text dynamically
-                bannerTitle.textContent = title;
-                bannerSubtitle.textContent = subtitle;
-            }
-
-            btnTracking.addEventListener('click', () => {
-                switchTab(btnTracking, viewTracking, 'TRACK YOUR PARCEL', "Follow your parcel's delivery status.");
-            });
-
-            btnOrders.addEventListener('click', () => {
-                switchTab(btnOrders, viewOrders, 'ORDERS', 'Everything you have sent with PDP.');
-            });
-
-            btnShipment.addEventListener('click', () => {
-                switchTab(btnShipment, viewShipment, 'NEW SHIPMENT', 'Register a new parcel.');
-                // Must initialize map AFTER the container is visible (display: block)
-                setTimeout(initializeOrderMap, 100); 
-            });
-
-            // --- MAP LOGIC ---
-            function saveOrigin(lat, lng) {
-                originLatitude.value = lat.toFixed(6);
-                originLongitude.value = lng.toFixed(6);
-            }
-
-            function initializeOrderMap() {
-                if (!window.L || orderMap) {
-                    if (orderMap) orderMap.invalidateSize(); // Fixes map rendering gray tiles
-                    return;
-                }
-
-                // Default Porto Coordinates
-                let origin = { lat: 41.1779, lng: -8.5981 };
-                originLatitude.value = origin.lat;
-                originLongitude.value = origin.lng;
-
-                // Load Leaflet Map
-                orderMap = L.map('client-order-map').setView([origin.lat, origin.lng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(orderMap);
-
-                // Add draggable marker
-                originMarker = L.marker([origin.lat, origin.lng], { draggable: true })
-                    .addTo(orderMap)
-                    .bindPopup('Order origin');
-
-                function updateOrigin(lat, lng) {
-                    originMarker.setLatLng([lat, lng]);
-                    saveOrigin(lat, lng);
-                }
-
-                // Map Click Event
-                orderMap.on('click', event => updateOrigin(event.latlng.lat, event.latlng.lng));
-                
-                // Marker Drag Event
-                originMarker.on('dragend', event => {
-                    const position = event.target.getLatLng();
-                    updateOrigin(position.lat, position.lng);
-                });
-
-                // Manual Input Sync
-                [originLatitude, originLongitude].forEach(input => {
-                    input.addEventListener('change', () => {
-                        const lat = Number(originLatitude.value);
-                        const lng = Number(originLongitude.value);
-                        if (Number.isFinite(lat) && Number.isFinite(lng)) {
-                            updateOrigin(lat, lng);
-                            orderMap.setView([lat, lng]);
-                        }
-                    });
-                });
-            }
-            
-        });
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Tabs, tracking, orders, shipment form, map -->
+     <script src="data.js"></script>
+    <script src="client.js"></script>
 </body>
 </html>
