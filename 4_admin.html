@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDP - admin</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
     <!--Header the website, implemented the logo, navigation bar and login button-->
@@ -42,7 +43,14 @@
       <!-- 1. Dynamik KPI -->
       <section class="stats-grid" id="stats-container">
       </section>
-  
+
+      <!-- Operational KPIs, calculated from the live data (admin.js) -->
+      <section class="card">
+        <h2>OPERATIONAL KPIs</h2>
+        <div class="kpi-groups" id="kpi-container">
+        </div>
+      </section>
+
       <!-- Diagram -->
       <section class="card">
         <h2>DELIVERIES THIS WEEK</h2>
@@ -64,9 +72,10 @@
       </div>
   </section>
     </main>
-    
-  
+
+
     <script src="scripts.js" defer></script>
+    <script src="admin.js" defer></script>
 
 <footer>
         <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
