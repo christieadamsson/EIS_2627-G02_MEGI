@@ -1121,4 +1121,762 @@ footer {
 }
 
 
+/* =========================================
+   LOGIN & REGISTER PAGE (1_login.html)
+   (merged from 1_login_css.css)
+   ========================================= */
 
+.auth-section {
+    max-width: 1320px;          /* 1200px content + 2 x 60px padding, lines up with the banner */
+    margin: 45px auto 70px;
+    padding: 0 60px;
+    width: 100%;
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+/* --- Left: info panel --- */
+.auth-info {
+    flex: 1;
+    min-width: 0;
+    background-color: #101923;
+    color: #cbd5e1;
+    border-radius: 14px;
+    padding: 36px 32px;
+}
+
+.auth-info h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: 34px;
+    line-height: 1;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.auth-info > p {
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+.role-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.role-list li {
+    padding-left: 14px;
+    border-left: 3px solid #6bd0f6;
+    font-size: 14px;
+}
+
+.role-list strong {
+    display: block;
+    color: #ffffff;
+}
+
+.demo-box {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 18px 20px;
+}
+
+.demo-box h4 {
+    color: #6bd0f6;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+.demo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.demo-table th {
+    text-align: left;
+    color: #94a3b8;
+    font-weight: 600;
+    padding: 4px 12px 6px 0;
+}
+
+.demo-table td {
+    color: #ffffff;
+    padding: 4px 12px 4px 0;
+    white-space: nowrap;
+}
+
+/* --- Right: form card --- */
+.auth-card {
+    flex: 1.3;
+    min-width: 0;
+    background-color: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    padding: 32px;
+}
+
+.auth-tabs {
+    display: flex;
+    background-color: #f1f5f9;
+    border-radius: 30px;
+    padding: 5px;
+    margin-bottom: 24px;
+}
+
+.auth-tab {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    border-radius: 25px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #334155;
+    cursor: pointer;
+}
+
+.auth-tab.active {
+    background-color: #6bd0f6;
+    color: #0f172a;
+}
+
+/* Colours come from .msg-error / .msg-success in style.css */
+.auth-msg {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-form[hidden] {
+    display: none;
+}
+
+.auth-form .form-row {
+    display: flex;
+    gap: 16px;
+}
+
+.auth-form .form-row .form-group {
+    flex: 1;
+    min-width: 0;
+}
+
+.auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-form .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.auth-form .form-group input,
+.auth-form .form-group select {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #1e293b;
+}
+
+.auth-form .form-group input:focus,
+.auth-form .form-group select:focus {
+    outline: none;
+    border-color: #6bd0f6;
+    box-shadow: 0 0 0 3px rgba(107, 208, 246, 0.3);
+}
+
+.auth-form .form-group .input-error {
+    border-color: #ef4444;
+}
+
+.auth-form .field-error {
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.auth-form .field-error:empty {
+    display: none;
+}
+
+.auth-form .checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 400;
+}
+
+.auth-form .form-group .checkbox-label input {
+    width: auto;
+    margin-top: 3px;
+}
+
+.form-note {
+    font-size: 13px;
+    color: #64748b;
+    background-color: #f8fafc;
+    border-left: 3px solid #6bd0f6;
+    padding: 10px 12px;
+    border-radius: 4px;
+}
+
+.btn-submit {
+    width: 100%;
+    background-color: #6bd0f6;
+    color: #0f172a;
+    border: none;
+    padding: 14px;
+    border-radius: 30px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(107, 208, 246, 0.35);
+}
+
+.btn-submit:hover {
+    background-color: #4ec2ee;
+}
+
+.btn-submit:focus-visible,
+.auth-tab:focus-visible {
+    outline: 3px solid #0284c7;
+    outline-offset: 2px;
+}
+
+.switch-text {
+    text-align: center;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.switch-text a {
+    color: #0284c7;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* --- Responsive --- */
+@media (max-width: 850px) {
+    .auth-section {
+        flex-direction: column-reverse;   /* form first on small screens */
+        padding: 0 20px;
+    }
+    .auth-info,
+    .auth-card {
+        width: 100%;
+    }
+    .auth-card {
+        padding: 24px 20px;
+    }
+    .auth-form .form-row {
+        flex-direction: column;
+    }
+}
+
+
+/* =========================================
+   COURIER PAGE (3_courier.html)
+   (merged from 3_courier_css.css)
+   ========================================= */
+
+.courier-section {
+    max-width: 1320px;          /* 1200px content + 2 x 60px padding, lines up with the banner */
+    margin: 45px auto 70px;
+    padding: 0 60px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* --- Summary --- */
+.route-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.route-stats .stat-card {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    padding: 22px 25px;
+}
+
+.route-stats .stat-card p {
+    color: #475569;
+    font-size: 15px;
+}
+
+.route-stats .stat-card h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: 48px;
+    line-height: 1;
+    color: #075985;
+    margin-top: 6px;
+}
+
+/* --- Message (colours from .msg-error / .msg-success in style.css) --- */
+.courier-msg {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+}
+
+/* --- Layout --- */
+.cockpit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.cockpit-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.panel {
+    background-color: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    padding: 24px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.1;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.panel-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.panel-select {
+    width: 100%;
+    padding: 11px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #1e293b;
+}
+
+.panel-select:focus {
+    outline: none;
+    border-color: #6bd0f6;
+    box-shadow: 0 0 0 3px rgba(107, 208, 246, 0.3);
+}
+
+.field-hint {
+    font-size: 13px;
+    color: #64748b;
+    margin: 6px 0 12px;
+}
+
+/* --- Load bar (weight in route vs. vehicle capacity) --- */
+.load-box {
+    margin-top: 8px;
+}
+
+.load-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.load-bar {
+    height: 10px;
+    background-color: #f1f5f9;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.load-fill {
+    height: 100%;
+    width: 0;
+    background-color: #6bd0f6;
+    transition: width 0.3s;
+}
+
+.load-fill.over {
+    background-color: #ef4444;
+}
+
+/* --- Order rows --- */
+.order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.order-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+
+.order-row-id {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    line-height: 1.1;
+    color: #075985;
+}
+
+.order-row-name {
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.order-row-meta {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.order-row-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.empty-text {
+    font-size: 14px;
+    color: #64748b;
+    padding: 6px 0;
+}
+
+/* --- Status badges --- */
+.status-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    background-color: #f1f5f9;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.status-initiated { background-color: #f1f5f9; color: #475569; }
+.status-progress  { background-color: #c9eefc; color: #0f172a; }
+.status-completed { background-color: #dcfce7; color: #15803d; }
+.status-cancelled { background-color: #fee2e2; color: #b91c1c; }
+
+/* --- Buttons --- */
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    border: none;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #6bd0f6;
+    color: #0f172a;
+}
+
+.btn-primary:hover { background-color: #4ec2ee; }
+
+.btn-secondary {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+.btn-secondary:hover { background-color: #e2e8f0; }
+
+.btn-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn-danger:hover { background-color: #fecaca; }
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible,
+.btn-link:focus-visible {
+    outline: 3px solid #0284c7;
+    outline-offset: 2px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #0284c7;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+#btn-start-route {
+    width: 100%;
+    padding: 13px;
+}
+
+/* --- Map --- */
+.map-panel {
+    position: sticky;
+    top: 20px;
+}
+
+#courier-map {
+    height: 480px;
+    border-radius: 12px;
+    border: 1px solid #dbe4ee;
+    z-index: 0;
+}
+
+.map-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: 8px;
+}
+
+.legend-depot { background-color: #2a81cb; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+.legend-stop  { background-color: #101923; }
+.legend-done  { background-color: #16a34a; }
+
+/* --- Completed table --- */
+.table-scroll {
+    overflow-x: auto;
+}
+
+.completed-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.completed-table th {
+    text-align: left;
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px 8px 0;
+    border-bottom: 1px solid #dbe4ee;
+}
+
+.completed-table td {
+    padding: 10px 12px 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+}
+
+.reset-row {
+    text-align: right;
+}
+
+/* --- Proof of delivery dialog --- */
+.pod-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(16, 25, 35, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.pod-overlay[hidden] {
+    display: none;
+}
+
+.pod-dialog {
+    background-color: #ffffff;
+    border-radius: 14px;
+    padding: 28px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.pod-tabs {
+    display: flex;
+    background-color: #f1f5f9;
+    border-radius: 30px;
+    padding: 5px;
+    margin: 12px 0 18px;
+}
+
+.pod-tab {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 9px;
+    border-radius: 25px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #334155;
+    cursor: pointer;
+}
+
+.pod-tab.active {
+    background-color: #6bd0f6;
+    color: #0f172a;
+}
+
+#signature-canvas {
+    display: block;
+    width: 100%;
+    height: 180px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+    background-color: #f8fafc;
+    touch-action: none;          /* lets you sign with a finger without scrolling */
+    cursor: crosshair;
+}
+
+#pod-photo {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+#pod-photo-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 220px;
+    margin-top: 12px;
+    border-radius: 10px;
+}
+
+#pod-photo-preview[hidden] {
+    display: none;
+}
+
+.pod-dialog .field-error {
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 600;
+    min-height: 18px;
+    margin-top: 10px;
+}
+
+.pod-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1000px) {
+    .cockpit-grid {
+        grid-template-columns: 1fr;
+    }
+    .map-panel {
+        position: static;
+        order: -1;               /* map first on tablets and phones */
+    }
+    #courier-map {
+        height: 340px;
+    }
+}
+
+@media (max-width: 850px) {
+    .courier-section {
+        padding: 0 20px;
+    }
+    .route-stats {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 500px) {
+    .order-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .order-row-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .panel {
+        padding: 18px;
+    }
+}
