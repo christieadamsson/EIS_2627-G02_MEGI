@@ -20,8 +20,8 @@
             <li><a href="0_homepage.html" class="active">Home</a></li>
             <li><a href="2_client.html">Client</a></li>
             <li><a href="3_courier.html">Courier</a></li>
-            <li><a href="4_admin.html">Admin</a></li>
             <li><a href="5_staff.html">Staff</a></li>
+            <li><a href="4_admin.html">Admin</a></li>
             <li><a href="6_team.html">Team</a></li>
             <li><a href="7_customerservice.html">Customer service</a></li>
 
@@ -37,17 +37,18 @@
                 <h2 class="hero-title">PDP <span>PIGEON DELIVERY<br>PARCEL</span></h2>
 
                 <div class="tracking-wrapper">
-                    <form class="tracking-form" onsubmit="return checkTracking(event)">
-                        <input type="text" id="trackingNumber" placeholder="Enter tracking number e.g. RR-1042">
+                    <form class="tracking-form" onsubmit="return checkTracking(event)" novalidate>
+                        <input type="text" id="trackingNumber" placeholder="Enter tracking number e.g. RR-1042" aria-label="Tracking number">
                         <button type="submit" class="btn-track">TRACK</button>
                     </form>
                     <div id="tracking-msg"></div>
                 </div>
 
                 <div class="hero-buttons">
-                    <a href="1_login.html" class="btn-light">GET STARTED</a>
+                    <a href="1_login.html#register" class="btn-light">CREATE ACCOUNT</a>
                     <a href="6_team.html" class="btn-outline">MEET THE TEAM</a>
                 </div>
+                <p class="hero-links">Already have an account? <a href="1_login.html">Log in</a></p>
             </div>
         </header>
 
@@ -95,28 +96,47 @@
         <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
     </footer>
 
-    <!-- Form validation -->
-    <!-- might be necessary to see if we want to check something else, like if tracking no. should have a specific form e.g., "XX-123" etc, but this is basic-->
+    <!-- Tracking form: validation + lookup in the sample data (data.js) -->
     <script>
+        function showTrackingMessage(type, html) {
+            var msgBox = document.getElementById("tracking-msg");
+            msgBox.style.display = "block";
+            msgBox.className = type === "error" ? "msg-error" : "msg-success";
+            msgBox.innerHTML = html;
+        }
+
         function checkTracking(event) {
             event.preventDefault();
-            var input = document.getElementById("trackingNumber").value.trim();
-            var msgBox = document.getElementById("tracking-msg");
+            var field = document.getElementById("trackingNumber");
+            var input = field.value.trim();
+            field.classList.remove("input-error");
 
             if (input === "") {
                 alert("Please enter a tracking number.");
-                msgBox.style.display = "block";
-                msgBox.className = "msg-error";
-                msgBox.textContent = "Error: Field cannot be empty.";
+                field.classList.add("input-error");
+                showTrackingMessage("error", "Error: Field cannot be empty.");
                 return false;
             }
 
-            msgBox.style.display = "block";
-            msgBox.className = "msg-success";
-            msgBox.textContent = "Order found.";
+            if (!PDP_TRACKING_PATTERN.test(input)) {
+                field.classList.add("input-error");
+                showTrackingMessage("error", "Tracking numbers look like RR-1042 (RR- followed by 4 digits).");
+                return false;
+            }
+
+            var order = pdpFindOrder(input);
+            if (!order) {
+                field.classList.add("input-error");
+                showTrackingMessage("error", "No parcel found with number " + input.toUpperCase() + ".");
+                return false;
+            }
+
+            showTrackingMessage("success", order.id + ": " + order.status + " – to " + order.address.split(",").pop().trim() +
+                ". <a href=\"2_client.html#" + order.id + "\">See details in the client area</a>");
             return true;
         }
     </script>
+
     <script src="data.js"></script>
     <script src="homepage.js"></script>
 </body>

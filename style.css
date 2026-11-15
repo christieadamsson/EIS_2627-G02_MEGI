@@ -1982,3 +1982,132 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* --- Homepage: account link under the hero buttons, tracking result link, tracking error --- */
+.hero-links {
+    margin-top: 18px;
+    font-size: 14px;
+    color: #cbd5e1;
+}
+
+.hero-links a {
+    color: #6bd0f6;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+#tracking-msg a {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.tracking-form:has(input.input-error) {
+    box-shadow: 0 0 0 3px #ef4444;
+}
+
+/* =========================================
+   Phone and tablet layout (all pages)
+   ========================================= */
+@media (max-width: 1000px) {
+    .navbar {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 15px 30px;
+    }
+    .nav-links,
+    .navbar > nav {
+        order: 3;
+        width: 100%;
+    }
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 850px) {
+    .navbar {
+        padding: 12px 20px;
+    }
+    .nav-links {
+        gap: 4px;
+    }
+    .nav-links a {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    .hero {
+        min-height: 0;
+    }
+    .hero-content,
+    .tracking-wrapper {
+        max-width: 100%;
+        min-width: 0;
+    }
+    .services-grid {
+        flex-direction: column;
+    }
+    .tab-group {
+        flex-wrap: wrap;
+    }
+    .search-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-box .tracking-input {
+        flex: none;
+        width: 100%;
+    }
+    .shipment-grid,
+    .cs-grid,
+    .cs-bottom-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .pricing-card {
+        width: 100%;
+    }
+    .customer-section,
+    .cs-container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .team-banner {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .team-heading {
+        font-size: 44px;
+        overflow-wrap: break-word;
+    }
+}
+
+/* Phones: wide tables scroll inside their card instead of stretching the page */
+@media (max-width: 850px) {
+    .dashboard {
+        width: 100%;
+        min-width: 0;
+    }
+    .dashboard > * {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 500px) {
+    .hero-title {
+        font-size: 44px;
+    }
+    .hero-buttons {
+        flex-wrap: wrap;
+    }
+    .tracking-form {
+        padding-left: 14px;
+    }
+    .tracking-form input {
+        min-width: 0;
+    }
+    .brand-text h1 {
+        font-size: 24px;
+    }
+}
