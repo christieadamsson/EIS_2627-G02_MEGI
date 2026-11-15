@@ -1880,3 +1880,43 @@ footer {
         padding: 18px;
     }
 }
+
+/* --- Courier: "My vehicles" panel (register vehicle / renew documents) --- */
+.vehicle-form {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 16px;
+}
+
+.vehicle-form-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.vehicle-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.vehicle-form-wide {
+    grid-column: 1 / -1;
+}
+
+.vehicle-form .field-error {
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 600;
+    min-height: 18px;
+}
+
+.doc-warning { color: #b45309; font-weight: 600; }
+.doc-expired-text { color: #b91c1c; font-weight: 700; }
+
+@media (max-width: 500px) {
+    .vehicle-form-grid {
+        grid-template-columns: 1fr;
+    }
+}

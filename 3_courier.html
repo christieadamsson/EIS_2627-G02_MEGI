@@ -85,6 +85,71 @@
                         </div>
                     </section>
 
+                    <!-- My vehicles: register a vehicle / upload renewed documents.
+                         Both go to the staff page (5_staff.html) for approval. -->
+                    <section class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title">My vehicles</h3>
+                            <button type="button" class="btn-secondary" id="btn-new-vehicle">Register vehicle</button>
+                        </div>
+                        <p class="field-hint">New vehicles and renewed documents are checked by staff before you can use them.</p>
+                        <div id="my-vehicles-list" class="order-list"></div>
+
+                        <form id="vehicle-form" class="vehicle-form" novalidate hidden>
+                            <h4 class="vehicle-form-title" id="vehicle-form-title">Register a vehicle</h4>
+
+                            <div class="vehicle-form-grid" id="vf-details">
+                                <div>
+                                    <label class="panel-label" for="vf-plate">Plate</label>
+                                    <input type="text" id="vf-plate" class="panel-select" placeholder="e.g. AA-12-BC" maxlength="10">
+                                </div>
+                                <div>
+                                    <label class="panel-label" for="vf-model">Model</label>
+                                    <input type="text" id="vf-model" class="panel-select" placeholder="e.g. Renault Kangoo">
+                                </div>
+                                <div>
+                                    <label class="panel-label" for="vf-type">Type</label>
+                                    <select id="vf-type" class="panel-select">
+                                        <option value="Bike">Bike</option>
+                                        <option value="Moto">Moto</option>
+                                        <option value="Van">Van</option>
+                                        <option value="Truck">Truck</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="panel-label" for="vf-weight">Max weight (kg)</label>
+                                    <input type="number" id="vf-weight" class="panel-select" min="1" step="1">
+                                </div>
+                                <div>
+                                    <label class="panel-label" for="vf-volume">Max volume (m³)</label>
+                                    <input type="number" id="vf-volume" class="panel-select" min="0.01" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="vehicle-form-grid">
+                                <div>
+                                    <label class="panel-label" for="vf-insurance">Insurance valid until</label>
+                                    <input type="date" id="vf-insurance" class="panel-select">
+                                </div>
+                                <div>
+                                    <label class="panel-label" for="vf-inspection">Inspection valid until</label>
+                                    <input type="date" id="vf-inspection" class="panel-select">
+                                </div>
+                                <div class="vehicle-form-wide">
+                                    <label class="panel-label" for="vf-certificate">Certificate (insurance / inspection)</label>
+                                    <input type="file" id="vf-certificate" accept="image/*,.pdf">
+                                </div>
+                            </div>
+
+                            <p class="field-error" id="vf-error"></p>
+
+                            <div class="pod-actions">
+                                <button type="button" class="btn-secondary" id="btn-vehicle-cancel">Cancel</button>
+                                <button type="submit" class="btn-primary" id="btn-vehicle-submit">Send to staff</button>
+                            </div>
+                        </form>
+                    </section>
+
                     <!-- Current route -->
                     <section class="panel">
                         <div class="panel-header">

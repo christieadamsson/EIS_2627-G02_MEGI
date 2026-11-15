@@ -36,52 +36,38 @@
         return div.innerHTML;
     }
 
-    // --- 2. Courier accounts for the vehicle owners in data.js ---
-    // data.js has vehicles for couriers that had no account. They get one here,
-    // so every courier on this page is a real account that can log in once approved.
-    // João Pereira and Inês Rocha start as 'pending' to have something to approve.
+    // --- 2. No made-up data: everything shown comes from real accounts ---
+    // Couriers: registered on 1_login.html (+ the demo courier in login.js).
+    // Vehicles: those of real couriers, as seen and registered on 3_courier.html.
 
-    const SAMPLE_COURIERS = [
-        { name: 'Rui Oliveira', username: 'rui.oliveira', email: 'rui.oliveira@pdp.pt', phone: '912000111', nif: '201000111', status: 'active' },
-        { name: 'João Pereira', username: 'joao.pereira', email: 'joao.pereira@pdp.pt', phone: '913000222', nif: '202000222', status: 'pending' },
-        { name: 'Inês Rocha',   username: 'ines.rocha',   email: 'ines.rocha@pdp.pt',   phone: '914000333', nif: '203000333', status: 'pending' }
-    ];
+    // Removes the made-up couriers/vehicles that earlier versions of this page saved
+    function removeOldSampleData() {
+        const fakeEmails = ['rui@pdp.pt', 'beatriz@pdp.pt', 'rui.oliveira@pdp.pt', 'joao.pereira@pdp.pt', 'ines.rocha@pdp.pt'];
+        const users = readList('registeredUsers');
+        const realUsers = users.filter(function (u) { return fakeEmails.indexOf(u.email) === -1; });
+        if (realUsers.length !== users.length) saveList('registeredUsers', realUsers);
 
-    // Removes test data from earlier versions of this page
-    function removeOldSampleData(users, vehicles) {
-        const oldUsers = ['rui.almeida', 'beatriz.nunes'];
-        const oldPlates = ['45-XZ-78', 'BK-0012'];
+        const fakePlates = ['45-XZ-78', 'BK-0012'];
+        const vehicles = pdpGetVehicles();
+        const realVehicles = vehicles.filter(function (v) { return fakePlates.indexOf(v.plate) === -1; });
+        if (realVehicles.length !== vehicles.length) pdpSaveVehicles(realVehicles);
+
         localStorage.removeItem('courierVehicles');
         localStorage.removeItem('staffSampleData');
-        return {
-            users: users.filter(function (u) { return oldUsers.indexOf(u.username) === -1; }),
-            vehicles: vehicles.filter(function (v) { return oldPlates.indexOf(v.plate) === -1; })
-        };
-    }
-
-    function seedCourierAccounts() {
-        const cleaned = removeOldSampleData(readList('registeredUsers'), pdpGetVehicles());
-        const users = cleaned.users;
-        pdpSaveVehicles(cleaned.vehicles);
-
-        // Only couriers who still own a vehicle get an account
-        // (so a rejected courier, whose vehicles are deleted, is not added again)
-        SAMPLE_COURIERS.forEach(function (c) {
-            const hasAccount = users.some(function (u) { return u.name === c.name; });
-            const ownsVehicle = cleaned.vehicles.some(function (v) { return v.courier === c.name; });
-            if (!hasAccount && ownsVehicle) {
-                users.push(Object.assign({ password: 'courier123', role: 'courier', created_at: new Date().toISOString() }, c));
-            }
-        });
-        saveList('registeredUsers', users);
     }
 
     // --- 3. Checks ---
 
+    // 'active', 'pending', or 'unknown' when no such courier account exists
     function courierStatus(name) {
         if (name === DEMO_COURIER) return 'active';
         const user = readList('registeredUsers').find(function (u) { return u.role === 'courier' && u.name === name; });
         return user ? user.status : 'unknown';
+    }
+
+    // Only vehicles of real courier accounts (hides data.js samples of couriers that do not exist)
+    function courierVehicles() {
+        return pdpGetVehicles().filter(function (v) { return courierStatus(v.courier) !== 'unknown'; });
     }
 
     function checkDocument(dateString) {
@@ -110,7 +96,7 @@
         const container = document.getElementById('vehicle-alerts');
         const alerts = [];
 
-        pdpGetVehicles().forEach(function (v) {
+        courierVehicles().forEach(function (v) {
             [['Insurance', v.insuranceExpiry], ['Inspection', v.inspectionExpiry]].forEach(function (doc) {
                 const check = checkDocument(doc[1]);
                 if (check.state === 'expired') {
@@ -145,7 +131,7 @@
         document.getElementById('pending-couriers-count').textContent = pending.length;
         document.getElementById('pending-couriers-info').textContent =
             available + ' order(s) are waiting under "Available orders" on the courier page. ' +
-            'A courier can take them once their account and a vehicle are approved.';
+            'A courier can take them after you approve their account and they register a vehicle there for approval below.';
 
         if (pending.length === 0) {
             container.innerHTML = '<p class="empty-msg">No couriers waiting for approval.</p>';
@@ -153,16 +139,11 @@
         }
 
         container.innerHTML = pending.map(function (c) {
-            const vehicles = pdpGetVehicles().filter(function (v) { return v.courier === c.name; });
-            const vehicleText = vehicles.length
-                ? vehicles.map(function (v) { return v.plate + ' (' + v.type + ')'; }).join(', ')
-                : 'no vehicle registered';
             return `
                 <li class="user-item">
                     <div>
                         <div class="user-name">${escapeHtml(c.name)}</div>
                         <div class="user-role">${escapeHtml(c.email)} · Phone ${escapeHtml(c.phone)} · NIF ${escapeHtml(c.nif)} · Registered ${escapeHtml((c.created_at || '').slice(0, 10))}</div>
-                        <div class="user-role">Vehicles: ${escapeHtml(vehicleText)}</div>
                     </div>
                     <div class="approval-actions">
                         <button class="btn-approve" data-action="approve-courier" data-id="${escapeHtml(c.username)}">Approve</button>
@@ -174,7 +155,7 @@
 
     function renderVehicles() {
         const tbody = document.getElementById('vehicle-table-body');
-        const vehicles = pdpGetVehicles();
+        const vehicles = courierVehicles();
         document.getElementById('pending-vehicles-count').textContent =
             vehicles.filter(function (v) { return v.status === 'Pending'; }).length;
 
@@ -206,7 +187,8 @@
             return `
                 <tr class="${expired ? 'row-expired' : ''}">
                     <td class="order-id">${escapeHtml(v.plate)}</td>
-                    <td><strong>${escapeHtml(v.model)}</strong><br><small>${escapeHtml(v.type)} · ${v.maxWeightKg} kg · ${v.maxVolM3} m³</small></td>
+                    <td><strong>${escapeHtml(v.model)}</strong><br><small>${escapeHtml(v.type)} · ${escapeHtml(v.maxWeightKg)} kg · ${escapeHtml(v.maxVolM3)} m³</small>
+                        ${v.certificateFile ? '<br><small>Certificate: ' + escapeHtml(v.certificateFile) + '</small>' : ''}</td>
                     <td>${escapeHtml(v.courier)}${courierPending ? '<br><small>Courier pending</small>' : ''}</td>
                     <td>${documentCell(v.insuranceExpiry)}</td>
                     <td>${documentCell(v.inspectionExpiry)}</td>
@@ -230,7 +212,7 @@
         courier.status = 'active'; // login.js now lets this courier log in
         saveList('registeredUsers', users);
         alert(`${courier.name} is approved and can now log in as a courier. ` +
-              `Approve one of their vehicles so they can take available orders.`);
+              `They can now register a vehicle on the courier page; it will appear below for approval.`);
     }
 
     function rejectCourier(username) {
@@ -290,7 +272,7 @@
     // --- 6. Start ---
 
     document.addEventListener('DOMContentLoaded', function () {
-        seedCourierAccounts();
+        removeOldSampleData();
         renderStaffPanel();
     });
 })();

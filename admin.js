@@ -36,7 +36,11 @@
     function calculateKpis() {
         const orders = pdpGetOrders();
         const registered = readJSON('registeredUsers', []);
-        const vehicles = pdpGetVehicles();
+        // Only vehicles of real courier accounts (same list as the staff page)
+        const courierNames = ['Miguel Santos'].concat(registered
+            .filter(function (u) { return u.role === 'courier'; })
+            .map(function (u) { return u.name; }));
+        const vehicles = pdpGetVehicles().filter(function (v) { return courierNames.indexOf(v.courier) !== -1; });
         const pendingStaff = readJSON('pendingStaff', [
             { name: 'Johan Lindström' }, { name: 'Elin Berg' } // same default as scripts.js
         ]);
