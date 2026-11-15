@@ -152,9 +152,8 @@ const PDP_TRACKING_PATTERN = /^RR-\d{4}$/i;
 // when the file is opened locally we use CARTO's tiles, which are also made from OpenStreetMap data.
 function pdpAddTileLayer(map) {
     if (location.protocol === 'file:') {
-        return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        return L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_59hz_1_a8a64457799c889a69ec9071', {
             maxZoom: 19,
-            subdomains: 'abcd',
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         }).addTo(map);
     }
