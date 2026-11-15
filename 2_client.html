@@ -10,6 +10,16 @@
     
     <style>
         /* Orders View specific layout */
+        .system-order-count {
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .system-order-count strong {
+            color: #0f172a;
+        }
+
         .orders-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -257,6 +267,7 @@
 
             <!-- VIEW 2: ORDERS (History & Active) -->
             <div id="view-orders" style="display: none;">
+                <p class="system-order-count">All system orders: <strong id="client-system-order-count">—</strong></p>
                 <div class="orders-grid">
 
                     <!-- Active Orders Column -->

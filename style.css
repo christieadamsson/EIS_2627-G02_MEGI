@@ -278,6 +278,64 @@ main {
     font-size: 14px;
 }
 
+.overview-metrics {
+    position: relative;
+    z-index: 1;
+    max-width: 1264px;
+    margin: -32px auto 0;
+    padding: 0 32px;
+}
+
+.overview-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.overview-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px 24px;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.overview-metric-value {
+    color: #0b6bcb;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.overview-metric-label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+@media (max-width: 850px) {
+    .overview-metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 500px) {
+    .overview-metrics {
+        padding: 0 20px;
+    }
+
+    .overview-metric {
+        padding: 16px;
+    }
+
+    .overview-metric-value {
+        font-size: 26px;
+    }
+}
+
 /* --- Team Page --- */
 .team-banner {
     background-color: #101923;

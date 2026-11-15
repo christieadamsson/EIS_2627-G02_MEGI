@@ -51,6 +51,27 @@
             </div>
         </header>
 
+        <section class="overview-metrics" aria-label="Live service metrics">
+            <div class="overview-metrics-grid">
+                <article class="overview-metric">
+                    <span class="overview-metric-value" id="metric-orders">—</span>
+                    <span class="overview-metric-label">Orders in system</span>
+                </article>
+                <article class="overview-metric">
+                    <span class="overview-metric-value" id="metric-active-orders">—</span>
+                    <span class="overview-metric-label">Active deliveries</span>
+                </article>
+                <article class="overview-metric">
+                    <span class="overview-metric-value" id="metric-couriers">—</span>
+                    <span class="overview-metric-label">Active couriers</span>
+                </article>
+                <article class="overview-metric">
+                    <span class="overview-metric-value" id="metric-vehicles">—</span>
+                    <span class="overview-metric-label">Approved vehicles</span>
+                </article>
+            </div>
+        </section>
+
         <section class="services-section">
             <h2>SYSTEM OVERVIEW</h2>
             <div class="services-grid">
@@ -96,6 +117,7 @@
             return true;
         }
     </script>
-
+    <script src="data.js"></script>
+    <script src="homepage.js"></script>
 </body>
 </html>

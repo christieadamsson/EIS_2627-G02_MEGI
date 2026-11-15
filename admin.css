@@ -16,7 +16,7 @@
 
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 14px;
 }
 
@@ -101,7 +101,7 @@
 .profile-msg-error   { color: #b42318; }
 
 @media (max-width: 800px) {
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
     .profile-form { grid-template-columns: 1fr; }
 }
 

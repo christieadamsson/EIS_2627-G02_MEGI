@@ -174,10 +174,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderOrders() {
-        const mine = pdpGetOrders().filter(o => o.client === CLIENT);
+        const orders = pdpGetOrders();
+        const mine = orders.filter(o => o.client === CLIENT);
         const active = mine.filter(o => o.status === PDP_STATUS.INITIATED || o.status === PDP_STATUS.IN_PROGRESS);
         const history = mine.filter(o => o.status === PDP_STATUS.COMPLETED || o.status === PDP_STATUS.CANCELLED);
 
+        document.getElementById('client-system-order-count').textContent = orders.length;
         document.getElementById('active-orders').innerHTML = active.length
             ? active.map(orderCard).join('') : '<p class="empty-text">No active orders.</p>';
         document.getElementById('history-orders').innerHTML = history.length
@@ -193,6 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
         track(button.dataset.id);
     });
 
+    window.addEventListener('storage', event => {
+        if (event.key === 'pdpOrders') renderOrders();
+    });
 
     // --- MAP LOGIC ---
     function saveCoordinates(latInput, lngInput, lat, lng) {

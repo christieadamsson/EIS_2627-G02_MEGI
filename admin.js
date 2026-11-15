@@ -8,6 +8,9 @@
 //   "adminUsers"      -> users approved by the admin (scripts.js)
 // =========================================
 (function () {
+    const DAY = 24 * 60 * 60 * 1000;
+    const WARNING_DAYS = 30;
+
     // --- 1. Storage helpers ---
 
     function readJSON(key, fallback) {
@@ -23,16 +26,25 @@
         localStorage.setItem(key, JSON.stringify(value));
     }
 
+    function daysUntil(dateString) {
+        const today = new Date(new Date().toISOString().slice(0, 10));
+        return Math.round((new Date(dateString) - today) / DAY);
+    }
+
     // --- 2. Operational KPIs ---
 
     function calculateKpis() {
         const orders = pdpGetOrders();
         const registered = readJSON('registeredUsers', []);
-        // Same vehicle list and rules as the staff and courier pages (data.js)
-        const vehicles = pdpCourierVehicles();
+        // Only vehicles of real courier accounts (same list as the staff page)
+        const courierNames = ['Miguel Santos'].concat(registered
+            .filter(function (u) { return u.role === 'courier'; })
+            .map(function (u) { return u.name; }));
+        const vehicles = pdpGetVehicles().filter(function (v) { return courierNames.indexOf(v.courier) !== -1; });
         const pendingStaff = readJSON('pendingStaff', [
             { name: 'Johan Lindström' }, { name: 'Elin Berg' } // same default as scripts.js
         ]);
+        const adminUsers = readJSON('adminUsers', typeof dashboardData !== 'undefined' ? dashboardData.users : []);
 
         const delivered = orders.filter(function (o) { return o.status === PDP_STATUS.COMPLETED; }).length;
         const inTransit = orders.filter(function (o) { return o.status === PDP_STATUS.IN_PROGRESS; }).length;
@@ -44,19 +56,29 @@
         const activeCouriers = 1 + couriers.filter(function (u) { return u.status === 'active'; }).length; // +1 = demo courier
         const pendingCouriers = couriers.filter(function (u) { return u.status === 'pending'; }).length;
         const clients = 1 + registered.filter(function (u) { return u.role === 'client'; }).length; // +1 = demo client
+        const staffNames = new Set(['Sofia Martins']); // demo staff account
+        adminUsers.forEach(function (user) {
+            const role = String(user.role || '').toUpperCase();
+            if (user.status === 'ACTIVE' && role !== 'TEAM MEMBER' && role !== 'ADMIN') {
+                staffNames.add(user.name);
+            }
+        });
+        registered.forEach(function (user) {
+            if (user.role === 'staff' && user.status === 'active') staffNames.add(user.name);
+        });
+        pendingStaff.forEach(function (user) { staffNames.add(user.name); });
 
         let expiredDocs = 0;
         let expiringDocs = 0;
         vehicles.forEach(function (v) {
-            if (v.status === PDP_VEHICLE.REJECTED) return;   // not in use, same as the staff alerts
             [v.insuranceExpiry, v.inspectionExpiry].forEach(function (date) {
-                const state = pdpDocState(date).state;
-                if (state === 'expired') expiredDocs++;
-                else if (state === 'soon') expiringDocs++;
+                const left = daysUntil(date);
+                if (left < 0) expiredDocs++;
+                else if (left <= WARNING_DAYS) expiringDocs++;
             });
         });
-        const approvedVehicles = vehicles.filter(function (v) { return v.status === PDP_VEHICLE.APPROVED; }).length;
-        const pendingVehicles = vehicles.filter(function (v) { return v.status === PDP_VEHICLE.PENDING; }).length;
+        const approvedVehicles = vehicles.filter(function (v) { return v.status === 'Approved'; }).length;
+        const pendingVehicles = vehicles.filter(function (v) { return v.status === 'Pending'; }).length;
 
         return [
             { group: 'Orders', items: [
@@ -74,6 +96,7 @@
             { group: 'People', items: [
                 { title: 'Active couriers', value: activeCouriers },
                 { title: 'Couriers to approve', value: pendingCouriers, warn: pendingCouriers > 0 },
+                { title: 'Total staff', value: staffNames.size, note: 'active and pending approval' },
                 { title: 'Staff to approve', value: pendingStaff.length, warn: pendingStaff.length > 0 },
                 { title: 'Clients', value: clients }
             ] }

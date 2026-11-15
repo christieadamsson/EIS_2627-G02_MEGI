@@ -11,8 +11,9 @@
 // =========================================
 
 // Logged-in courier (falls back to the demo courier)
-const currentUser = pdpCurrentUser();
-const ME = (currentUser && currentUser.role === 'courier') ? currentUser.name : PDP_DEMO_COURIER;
+let currentUser = null;
+try { currentUser = JSON.parse(localStorage.getItem('currentUser')); } catch (e) { currentUser = null; }
+const ME = (currentUser && currentUser.role === 'courier') ? currentUser.name : 'Miguel Santos';
 document.getElementById('courier-name').textContent = ME;
 
 const message = document.getElementById('courier-msg');
@@ -52,9 +53,12 @@ function myVehicles() {
     return pdpGetVehicles().filter(function (v) { return v.courier === ME; });
 }
 
-// A vehicle can be used only if staff approved it and its documents are valid (shared rule in data.js)
+// A vehicle can be used only if staff approved it and its documents are valid
 function vehicleProblem(v) {
-    return pdpVehicleProblem(v);
+    if (v.status !== 'Approved') return 'waiting for staff approval';
+    if (pdpDaysUntil(v.insuranceExpiry) < 0) return 'insurance expired';
+    if (pdpDaysUntil(v.inspectionExpiry) < 0) return 'inspection expired';
+    return '';
 }
 
 function selectedVehicle() {
@@ -77,6 +81,19 @@ function completedOrders(orders) {
 
 function routeWeight(route) {
     return route.reduce(function (sum, o) { return sum + Number(o.product.weightKg); }, 0);
+}
+
+function routeVolume(route) {
+    return route.reduce(function (sum, o) {
+        const volume = Number(o.product.volumeM3);
+        return Number.isFinite(volume) && volume >= 0 ? sum + volume : NaN;
+    }, 0);
+}
+
+function exceedsVolumeCapacity(volume, vehicle, orderCount) {
+    const capacity = Number(vehicle.maxVolM3);
+    const tolerance = Number.EPSILON * Math.max(1, orderCount) * Math.max(1, capacity);
+    return volume > capacity + tolerance;
 }
 
 function updateOrder(id, changes) {
@@ -348,6 +365,7 @@ function render() {
     document.getElementById('stat-route').textContent = route.length;
     document.getElementById('stat-available').textContent = available.length;
     document.getElementById('stat-completed').textContent = completed.length;
+    document.getElementById('stat-system-orders').textContent = orders.length;
 
     renderVehicleSelect(route, started);
     renderMyVehicles(route, started);
@@ -380,6 +398,21 @@ function addToRoute(id) {
             ') carries at most ' + vehicle.maxWeightKg + ' kg.');
         return;
     }
+    const volume = Number(order.product.volumeM3);
+    const routeVolumeM3 = routeVolume(route);
+    if (!Number.isFinite(volume) || volume < 0 || !Number.isFinite(routeVolumeM3)) {
+        showMessage('error', 'This order or route is missing valid parcel volume information.');
+        return;
+    }
+    if (!Number.isFinite(Number(vehicle.maxVolM3)) || Number(vehicle.maxVolM3) <= 0) {
+        showMessage('error', 'The selected vehicle has no valid volume capacity recorded.');
+        return;
+    }
+    if (exceedsVolumeCapacity(routeVolumeM3 + volume, vehicle, route.length + 1)) {
+        showMessage('error', order.id + ' does not fit: ' + vehicle.plate + ' (' + vehicle.type +
+            ') carries at most ' + vehicle.maxVolM3 + ' m³.');
+        return;
+    }
     updateOrder(id, { courier: ME });
     showMessage('success', id + ' added to your route.');
     render();
@@ -405,6 +438,20 @@ function startRoute() {
     }
     if (routeWeight(route) > vehicle.maxWeightKg) {
         showMessage('error', 'The route is too heavy for ' + vehicle.plate + '. Remove an order or choose a bigger vehicle.');
+        return;
+    }
+    const volume = routeVolume(route);
+    if (!Number.isFinite(volume)) {
+        showMessage('error', 'The route is missing valid parcel volume information.');
+        return;
+    }
+    if (!Number.isFinite(Number(vehicle.maxVolM3)) || Number(vehicle.maxVolM3) <= 0) {
+        showMessage('error', 'The selected vehicle has no valid volume capacity recorded.');
+        return;
+    }
+    if (exceedsVolumeCapacity(volume, vehicle, route.length)) {
+        showMessage('error', 'The route needs ' + volume.toFixed(4) + ' m³, but ' + vehicle.plate +
+            ' carries at most ' + vehicle.maxVolM3 + ' m³. Remove an order or choose a bigger vehicle.');
         return;
     }
 
@@ -563,18 +610,14 @@ const vfError = document.getElementById('vf-error');
 let renewPlate = null;   // null = registering a new vehicle, else the plate being renewed
 
 function documentText(label, dateString) {
-    const doc = pdpDocState(dateString);
-    if (doc.state === 'expired') return `<span class="doc-expired-text">${label} expired ${escapeHtml(dateString)}</span>`;
-    if (doc.state === 'soon') return `<span class="doc-warning">${label} expires in ${doc.daysLeft} days</span>`;
+    const days = pdpDaysUntil(dateString);
+    if (days < 0) return `<span class="doc-expired-text">${label} expired ${escapeHtml(dateString)}</span>`;
+    if (days <= 30) return `<span class="doc-warning">${label} expires in ${days} days</span>`;
     return `${label} until ${escapeHtml(dateString)}`;
 }
 
 function vehicleBadge(v) {
-    if (v.status === PDP_VEHICLE.REJECTED) {
-        return '<span class="status-badge status-cancelled">Rejected by staff</span>' +
-            (v.rejectReason ? `<div class="order-row-meta doc-expired-text">Reason: ${escapeHtml(v.rejectReason)}</div>` : '');
-    }
-    if (v.status !== PDP_VEHICLE.APPROVED) {
+    if (v.status !== 'Approved') {
         return '<span class="status-badge status-initiated">Waiting for staff</span>';
     }
     if (vehicleProblem(v)) return '<span class="status-badge status-cancelled">Blocked – documents expired</span>';
@@ -604,7 +647,7 @@ function renderMyVehicles(route, started) {
                 </div>
                 <div class="order-row-actions">
                     <button type="button" class="btn-secondary" data-vehicle-action="renew" data-plate="${escapeHtml(v.plate)}"
-                        ${inUse ? 'disabled title="Finish your current route first"' : ''}>${v.status === PDP_VEHICLE.REJECTED ? 'Fix and resubmit' : 'Renew documents'}</button>
+                        ${inUse ? 'disabled title="Finish your current route first"' : ''}>Renew documents</button>
                 </div>
             </div>`;
     }).join('');
@@ -679,9 +722,8 @@ function submitVehicleForm(e) {
         insuranceExpiry: insurance,
         inspectionExpiry: inspection,
         certificateFile: file.name,     // upload is simulated: only the name is kept
-        status: PDP_VEHICLE.PENDING,
-        newDocument: true,
-        rejectReason: ''
+        status: 'Pending',
+        newDocument: true
     });
     pdpSaveVehicles(vehicles);
 
