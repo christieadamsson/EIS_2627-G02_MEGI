@@ -103,6 +103,21 @@
             cursor: pointer;
         }
 
+        .map-feedback {
+            min-height: 18px;
+            margin: 6px 0 12px;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .map-feedback[data-state="error"] {
+            color: #b91c1c;
+        }
+
+        .map-feedback[data-state="success"] {
+            color: #15803d;
+        }
+
         .price-row.total {
             border-top: 1px solid #bae6fd;
             padding-top: 10px;
@@ -321,6 +336,9 @@
                             <h3 class="section-title mt-4">LOCATION COORDINATES</h3>
 
                             <label class="input-label" style="margin-top:12px;">Origin coordinates</label>
+                            <button type="button" class="btn-secondary" id="use-current-location">Use my current location</button>
+                            <p class="map-feedback">Location access requires your permission and a secure page (HTTPS or localhost).</p>
+                            <p class="map-feedback" id="location-feedback" role="status" aria-live="polite"></p>
                             <div class="dimensions-row">
                                 <div class="form-group">
                                     <input id="origin-latitude" class="form-input" type="number" step="any" placeholder="Latitude" aria-label="Origin latitude">
@@ -351,6 +369,8 @@
                             </div>
                             <!-- The Interactive Map Container -->
                             <div id="client-order-map" aria-label="Map to choose origin and destination"></div>
+                            <p class="map-feedback" id="route-feedback" role="status" aria-live="polite">Set an origin and destination to preview the route.</p>
+                            <p class="map-feedback">Road directions use the public OSRM demo service; a direct line is shown if routing is unavailable.</p>
                         </div>
 
                     </div>

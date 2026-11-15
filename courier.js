@@ -21,6 +21,8 @@ const vehicleSelect = document.getElementById('vehicle-select');
 let messageTimer;
 let map = null;
 let mapLayer = null;
+let mapRouteRequestId = 0;
+let mapRouteController = null;
 
 
 // --- 1. Helpers ---
@@ -199,8 +201,27 @@ function renderCompleted(completed) {
     }).join('');
 }
 
+function getDestinationPoint(order) {
+    if (order.destLat === null || order.destLat === undefined || String(order.destLat).trim() === '' ||
+        order.destLng === null || order.destLng === undefined || String(order.destLng).trim() === '') {
+        return null;
+    }
+
+    const lat = Number(order.destLat);
+    const lng = Number(order.destLng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+        return null;
+    }
+    return [lat, lng];
+}
+
 function renderMap(route) {
     const container = document.getElementById('courier-map');
+    const routeFeedback = document.getElementById('courier-route-feedback');
+    const requestId = ++mapRouteRequestId;
+    if (mapRouteController) mapRouteController.abort();
+    mapRouteController = null;
+
     if (!window.L) {
         container.innerHTML = '<p class="empty-text" style="padding:20px;">The map could not load. Check your internet connection.</p>';
         return;
@@ -225,24 +246,99 @@ function renderMap(route) {
             .bindPopup(escapeHtml(o.id) + ' – delivered');
     });
 
-    // Route: depot -> each stop, drawn as a polyline
-    const points = [depot];
-    route.forEach(function (o) { points.push([o.destLat, o.destLng]); });
-    if (points.length > 1) {
-        L.polyline(points, { color: '#0284c7', weight: 4, dashArray: '8 8' }).addTo(mapLayer);
-    }
-    route.forEach(function (o, index) {
-        L.circleMarker([o.destLat, o.destLng], { radius: 9, color: '#ffffff', weight: 2, fillColor: '#101923', fillOpacity: 1 })
+    // Order coordinates are selected on the client map and are the route's destination points.
+    const stops = route.map(function (order, index) {
+        return {
+            order: order,
+            index: index,
+            point: getDestinationPoint(order)
+        };
+    }).filter(function (stop) { return stop.point !== null; });
+
+    stops.forEach(function (stop) {
+        const o = stop.order;
+        L.circleMarker(stop.point, { radius: 9, color: '#ffffff', weight: 2, fillColor: '#101923', fillOpacity: 1 })
             .addTo(mapLayer)
-            .bindPopup('<strong>Stop ' + (index + 1) + ': ' + escapeHtml(o.id) + '</strong><br>' +
+            .bindPopup('<strong>Stop ' + (stop.index + 1) + ': ' + escapeHtml(o.id) + '</strong><br>' +
                        escapeHtml(o.recipient) + '<br>' + escapeHtml(o.address));
     });
 
-    if (points.length > 1) {
-        map.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
+    const points = [depot].concat(stops.map(function (stop) { return stop.point; }));
+    if (stops.length > 0) {
+        // Keep a visible direct line if the public routing service is temporarily unavailable.
+        const routeLine = L.polyline(points, {
+            color: '#0284c7',
+            weight: 4,
+            dashArray: '8 8'
+        }).addTo(mapLayer);
+        map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
     } else {
         map.setView(depot, 14);
     }
+
+    if (route.length !== stops.length) {
+        routeFeedback.textContent = 'One or more route stops have no valid destination coordinates. Update the order location to route to those addresses.';
+        routeFeedback.dataset.state = 'error';
+    } else if (stops.length === 0) {
+        routeFeedback.textContent = 'Add an order to preview its road route from the FEUP depot.';
+        routeFeedback.dataset.state = '';
+    } else {
+        routeFeedback.textContent = 'Finding the road route through ' + stops.length + ' stop' +
+            (stops.length === 1 ? '' : 's') + '…';
+        routeFeedback.dataset.state = '';
+
+        const coordinates = points.map(function (point) {
+            return point[1] + ',' + point[0];
+        }).join(';');
+        const routeUrl = 'https://router.project-osrm.org/route/v1/driving/' + coordinates +
+            '?overview=full&geometries=geojson&steps=false';
+
+        mapRouteController = new AbortController();
+        fetch(routeUrl, { signal: mapRouteController.signal })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Route service returned HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function (data) {
+                if (requestId !== mapRouteRequestId) return;
+                const roadCoordinates = data.code === 'Ok' && data.routes &&
+                    data.routes[0] && data.routes[0].geometry && data.routes[0].geometry.coordinates;
+                if (!roadCoordinates || roadCoordinates.length < 2) {
+                    throw new Error('No drivable route was found for these stops.');
+                }
+
+                const roadRoute = roadCoordinates.map(function (point) {
+                    return [point[1], point[0]];
+                });
+                mapLayer.clearLayers();
+                L.marker(depot).addTo(mapLayer)
+                    .bindPopup('<strong>' + escapeHtml(PDP_DEPOT.name) + '</strong><br>Start of every route');
+                completedOrders(pdpGetOrders()).forEach(function (o) {
+                    L.circleMarker([o.destLat, o.destLng], {
+                        radius: 6, color: '#ffffff', weight: 2, fillColor: '#16a34a', fillOpacity: 1
+                    }).addTo(mapLayer).bindPopup(escapeHtml(o.id) + ' – delivered');
+                });
+                L.polyline(roadRoute, { color: '#0284c7', weight: 5 }).addTo(mapLayer);
+                stops.forEach(function (stop) {
+                    const o = stop.order;
+                    L.circleMarker(stop.point, {
+                        radius: 9, color: '#ffffff', weight: 2, fillColor: '#101923', fillOpacity: 1
+                    }).addTo(mapLayer).bindPopup('<strong>Stop ' + (stop.index + 1) + ': ' +
+                        escapeHtml(o.id) + '</strong><br>' + escapeHtml(o.recipient) + '<br>' +
+                        escapeHtml(o.address));
+                });
+                map.fitBounds(L.latLngBounds(roadRoute), { padding: [40, 40] });
+                routeFeedback.textContent = 'Road route shown through the listed stops. Stop markers use each order\'s saved destination coordinates.';
+                routeFeedback.dataset.state = '';
+            })
+            .catch(function (error) {
+                if (error.name === 'AbortError' || requestId !== mapRouteRequestId) return;
+                routeFeedback.textContent = 'Road routing is unavailable; showing direct lines to the saved destination coordinates.';
+                routeFeedback.dataset.state = 'error';
+                console.warn('Could not load the courier road route', error);
+            });
+    }
+
     setTimeout(function () { map.invalidateSize(); }, 100);
 }
 

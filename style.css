@@ -1698,6 +1698,10 @@ footer {
     z-index: 0;
 }
 
+#courier-route-feedback[data-state="error"] {
+    color: #b91c1c;
+}
+
 .map-legend {
     display: flex;
     align-items: center;

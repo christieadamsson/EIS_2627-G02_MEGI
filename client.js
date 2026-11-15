@@ -27,10 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const originLongitude = document.getElementById('origin-longitude');
     const destinationLatitude = document.getElementById('destination-latitude');
     const destinationLongitude = document.getElementById('destination-longitude');
+    const useCurrentLocationButton = document.getElementById('use-current-location');
+    const locationFeedback = document.getElementById('location-feedback');
+    const routeFeedback = document.getElementById('route-feedback');
     let orderMap;
     let originMarker;
     let destinationMarker = null;
     let routeLine = null;
+    let routeRequestId = 0;
+    let routeRequestController = null;
 
     function escapeHtml(text) {
         const div = document.createElement('div');
@@ -197,6 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
         clearFieldError(lngInput);
     }
 
+    function showMapFeedback(element, text, state) {
+        element.textContent = text;
+        element.dataset.state = state || '';
+    }
+
     function readPoint(latInput, lngInput) {
         if (latInput.value.trim() === '' || lngInput.value.trim() === '') return null;
         const lat = Number(latInput.value);
@@ -205,9 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return { lat, lng };
     }
 
-    // Draws the destination marker and the route polyline origin -> destination
+    // Draws a road route when available, with a direct polyline as a fallback.
     function updateRoute() {
         if (!orderMap) return;
+        const requestId = ++routeRequestId;
+        if (routeRequestController) routeRequestController.abort();
+        routeRequestController = null;
+
         const origin = readPoint(originLatitude, originLongitude);
         const destination = readPoint(destinationLatitude, destinationLongitude);
 
@@ -235,12 +249,89 @@ document.addEventListener('DOMContentLoaded', () => {
             routeLine.remove();
             routeLine = null;
         }
-        if (origin && destination) {
-            routeLine = L.polyline([[origin.lat, origin.lng], [destination.lat, destination.lng]],
-                { color: '#0284c7', weight: 4, dashArray: '8 8' }).addTo(orderMap);
-            orderMap.fitBounds(routeLine.getBounds(), { padding: [40, 40], maxZoom: 15 });
+        if (!origin || !destination) {
+            showMapFeedback(routeFeedback, 'Set an origin and destination to preview the route.');
+            return;
         }
+
+        routeLine = L.polyline([[origin.lat, origin.lng], [destination.lat, destination.lng]],
+            { color: '#0284c7', weight: 4, dashArray: '8 8' }).addTo(orderMap);
+        orderMap.fitBounds(routeLine.getBounds(), { padding: [40, 40], maxZoom: 15 });
+
+        if (origin.lat === destination.lat && origin.lng === destination.lng) {
+            showMapFeedback(routeFeedback, 'Choose different origin and destination points.', 'error');
+            return;
+        }
+
+        showMapFeedback(routeFeedback, 'Finding a road route…');
+        routeRequestController = new AbortController();
+        const routeUrl = 'https://router.project-osrm.org/route/v1/driving/' +
+            origin.lng + ',' + origin.lat + ';' + destination.lng + ',' + destination.lat +
+            '?overview=full&geometries=geojson&steps=false';
+
+        fetch(routeUrl, { signal: routeRequestController.signal })
+            .then(response => {
+                if (!response.ok) throw new Error('Route service returned HTTP ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (requestId !== routeRequestId) return;
+                const coordinates = data.routes && data.routes[0] && data.routes[0].geometry &&
+                    data.routes[0].geometry.coordinates;
+                if (!coordinates || coordinates.length < 2) {
+                    throw new Error('No drivable route was found for these points.');
+                }
+
+                routeLine.setLatLngs(coordinates.map(point => [point[1], point[0]]));
+                routeLine.setStyle({ color: '#0284c7', weight: 5, dashArray: null });
+                orderMap.fitBounds(routeLine.getBounds(), { padding: [40, 40], maxZoom: 15 });
+                showMapFeedback(routeFeedback, 'Road route shown on the map.');
+            })
+            .catch(error => {
+                if (error.name === 'AbortError' || requestId !== routeRequestId) return;
+                showMapFeedback(routeFeedback, 'Road routing is unavailable; showing a direct line instead.', 'error');
+                console.warn('Could not load a road route', error);
+            });
     }
+
+    useCurrentLocationButton.addEventListener('click', () => {
+        if (!orderMap || !originMarker) {
+            showMapFeedback(locationFeedback, 'The map is still loading. Please try again in a moment.', 'error');
+            return;
+        }
+        if (!navigator.geolocation) {
+            showMapFeedback(locationFeedback, 'Location is unavailable in this browser. You can set the origin on the map or enter coordinates.', 'error');
+            return;
+        }
+
+        useCurrentLocationButton.disabled = true;
+        showMapFeedback(locationFeedback, 'Requesting your location…');
+        navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude, accuracy } = position.coords;
+            saveCoordinates(originLatitude, originLongitude, latitude, longitude);
+            originMarker.setLatLng([latitude, longitude]).setPopupContent('Your current location');
+            orderMap.setView([latitude, longitude], 15);
+            updateRoute();
+            updatePrice();
+            showMapFeedback(locationFeedback, 'Origin set from your location (accuracy about ' +
+                Math.round(accuracy) + ' m).', 'success');
+            useCurrentLocationButton.disabled = false;
+        }, error => {
+            const messages = {
+                1: 'Location permission was denied. Allow location access or set the origin on the map.',
+                2: 'Your location could not be determined. Try again or set the origin on the map.',
+                3: 'The location request timed out. Try again or set the origin on the map.'
+            };
+            const message = messages[error.code] ||
+                'Could not get your location. Set the origin on the map or enter coordinates.';
+            showMapFeedback(locationFeedback, message, 'error');
+            useCurrentLocationButton.disabled = false;
+        }, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        });
+    });
 
     function initializeOrderMap() {
         if (!window.L) {
