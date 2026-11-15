@@ -8,9 +8,6 @@
 //   "adminUsers"      -> users approved by the admin (scripts.js)
 // =========================================
 (function () {
-    const DAY = 24 * 60 * 60 * 1000;
-    const WARNING_DAYS = 30;
-
     // --- 1. Storage helpers ---
 
     function readJSON(key, fallback) {
@@ -26,21 +23,13 @@
         localStorage.setItem(key, JSON.stringify(value));
     }
 
-    function daysUntil(dateString) {
-        const today = new Date(new Date().toISOString().slice(0, 10));
-        return Math.round((new Date(dateString) - today) / DAY);
-    }
-
     // --- 2. Operational KPIs ---
 
     function calculateKpis() {
         const orders = pdpGetOrders();
         const registered = readJSON('registeredUsers', []);
-        // Only vehicles of real courier accounts (same list as the staff page)
-        const courierNames = ['Miguel Santos'].concat(registered
-            .filter(function (u) { return u.role === 'courier'; })
-            .map(function (u) { return u.name; }));
-        const vehicles = pdpGetVehicles().filter(function (v) { return courierNames.indexOf(v.courier) !== -1; });
+        // Same vehicle list and rules as the staff and courier pages (data.js)
+        const vehicles = pdpCourierVehicles();
         const pendingStaff = readJSON('pendingStaff', [
             { name: 'Johan Lindström' }, { name: 'Elin Berg' } // same default as scripts.js
         ]);
@@ -59,14 +48,15 @@
         let expiredDocs = 0;
         let expiringDocs = 0;
         vehicles.forEach(function (v) {
+            if (v.status === PDP_VEHICLE.REJECTED) return;   // not in use, same as the staff alerts
             [v.insuranceExpiry, v.inspectionExpiry].forEach(function (date) {
-                const left = daysUntil(date);
-                if (left < 0) expiredDocs++;
-                else if (left <= WARNING_DAYS) expiringDocs++;
+                const state = pdpDocState(date).state;
+                if (state === 'expired') expiredDocs++;
+                else if (state === 'soon') expiringDocs++;
             });
         });
-        const approvedVehicles = vehicles.filter(function (v) { return v.status === 'Approved'; }).length;
-        const pendingVehicles = vehicles.filter(function (v) { return v.status === 'Pending'; }).length;
+        const approvedVehicles = vehicles.filter(function (v) { return v.status === PDP_VEHICLE.APPROVED; }).length;
+        const pendingVehicles = vehicles.filter(function (v) { return v.status === PDP_VEHICLE.PENDING; }).length;
 
         return [
             { group: 'Orders', items: [

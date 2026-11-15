@@ -45,7 +45,7 @@ const PDP_DEFAULT_ORDERS = [
         address: 'Rua das Flores 33, Porto',
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1430, destLng: -8.6140,
         product: { description: 'Ceramic vase', category: 'Fragile', weightKg: 4, volumeM3: 0.02 },
-        status: 'In Progress', attempt: 1, courier: 'Rui Oliveira', vehicle: '90-AB-55',
+        status: 'In Progress', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
         createdAt: pdpDaysFromToday(-1), completedAt: null, pod: null
     },
     {
@@ -61,7 +61,7 @@ const PDP_DEFAULT_ORDERS = [
         address: 'Avenida dos Aliados 45, Porto',
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1475, destLng: -8.6110,
         product: { description: 'Books', category: 'Other', weightKg: 5, volumeM3: 0.02 },
-        status: 'Completed', attempt: 1, courier: 'Rui Oliveira', vehicle: '90-AB-55',
+        status: 'Completed', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
         createdAt: pdpDaysFromToday(-3), completedAt: pdpDaysFromToday(-2), pod: { type: 'Signature' }
     },
     {
@@ -74,20 +74,15 @@ const PDP_DEFAULT_ORDERS = [
     }
 ];
 
-// Vehicles registered by couriers and audited by staff
+// Vehicles registered by couriers (3_courier.html) and audited by staff (5_staff.html).
+// Only vehicles of real courier accounts – here the demo courier from login.js.
 const PDP_DEFAULT_VEHICLES = [
     { plate: 'AA-12-BC', model: 'Renault Kangoo', type: 'Van', courier: 'Miguel Santos', maxWeightKg: 650, maxVolM3: 3.3,
       insuranceExpiry: pdpDaysFromToday(200), inspectionExpiry: pdpDaysFromToday(120), status: 'Approved', newDocument: false },
     { plate: '45-XY-90', model: 'Honda PCX 125', type: 'Moto', courier: 'Miguel Santos', maxWeightKg: 25, maxVolM3: 0.1,
       insuranceExpiry: pdpDaysFromToday(12), inspectionExpiry: pdpDaysFromToday(90), status: 'Approved', newDocument: false },
     { plate: 'BK-0007', model: 'Cargo bike', type: 'Bike', courier: 'Miguel Santos', maxWeightKg: 40, maxVolM3: 0.2,
-      insuranceExpiry: pdpDaysFromToday(300), inspectionExpiry: pdpDaysFromToday(300), status: 'Pending', newDocument: true },
-    { plate: '90-AB-55', model: 'Peugeot Partner', type: 'Van', courier: 'Rui Oliveira', maxWeightKg: 700, maxVolM3: 3.7,
-      insuranceExpiry: pdpDaysFromToday(150), inspectionExpiry: pdpDaysFromToday(60), status: 'Approved', newDocument: false },
-    { plate: '12-ZZ-34', model: 'Mercedes Atego', type: 'Truck', courier: 'João Pereira', maxWeightKg: 7000, maxVolM3: 40,
-      insuranceExpiry: pdpDaysFromToday(-5), inspectionExpiry: pdpDaysFromToday(40), status: 'Pending', newDocument: false },
-    { plate: '77-QR-11', model: 'Yamaha NMAX', type: 'Moto', courier: 'Inês Rocha', maxWeightKg: 25, maxVolM3: 0.1,
-      insuranceExpiry: pdpDaysFromToday(100), inspectionExpiry: pdpDaysFromToday(-20), status: 'Pending', newDocument: false }
+      insuranceExpiry: pdpDaysFromToday(300), inspectionExpiry: pdpDaysFromToday(300), status: 'Pending', newDocument: true }
 ];
 
 // ---------- storage helpers ----------
@@ -140,6 +135,93 @@ function pdpResetData() {
      'pendingStaff', 'registeredUsers', 'currentUser', 'adminProfile'].forEach(function (key) {
         localStorage.removeItem(key);
     });
+}
+
+// Saved data from older versions had orders/vehicles of couriers without an account.
+// Clear it once so every page starts from the cleaned sample data above.
+const PDP_DATA_VERSION = '2';
+try {
+    if (localStorage.getItem('pdpDataVersion') !== PDP_DATA_VERSION) {
+        ['pdpOrders', 'pdpVehicles', 'pdpCourierVehicle'].forEach(function (key) { localStorage.removeItem(key); });
+        localStorage.setItem('pdpDataVersion', PDP_DATA_VERSION);
+    }
+} catch (e) { /* storage blocked: the sample data is used */ }
+
+// =========================================
+// Shared rules for couriers & vehicles
+// Used by 3_courier.html, 5_staff.html and 4_admin.html, so all pages agree.
+// =========================================
+
+const PDP_DEMO_COURIER = 'Miguel Santos';   // courier account built into login.js
+const PDP_WARNING_DAYS = 30;                // documents expiring within 30 days get a warning
+
+// Vehicle status set by staff: courier sends 'Pending', staff sets 'Approved' or 'Rejected'
+const PDP_VEHICLE = { PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected' };
+
+// Logged-in user saved by login.js ({ name, role }) or null
+function pdpCurrentUser() {
+    try { return JSON.parse(localStorage.getItem('currentUser')); } catch (e) { return null; }
+}
+
+// 'active', 'pending', or 'unknown' when there is no courier account with this name
+function pdpCourierStatus(name) {
+    if (name === PDP_DEMO_COURIER) return 'active';
+    let users = [];
+    try { users = JSON.parse(localStorage.getItem('registeredUsers')) || []; } catch (e) { users = []; }
+    const user = users.find(function (u) { return u.role === 'courier' && u.name === name; });
+    return user ? user.status : 'unknown';
+}
+
+// Vehicles of real courier accounts only
+function pdpCourierVehicles() {
+    return pdpGetVehicles().filter(function (v) { return pdpCourierStatus(v.courier) !== 'unknown'; });
+}
+
+// State of an insurance / inspection document: 'expired', 'soon' or 'valid'
+function pdpDocState(dateString) {
+    const daysLeft = pdpDaysUntil(dateString);
+    if (daysLeft < 0) return { state: 'expired', daysLeft: daysLeft };
+    if (daysLeft <= PDP_WARNING_DAYS) return { state: 'soon', daysLeft: daysLeft };
+    return { state: 'valid', daysLeft: daysLeft };
+}
+
+function pdpHasExpiredDocument(v) {
+    return pdpDocState(v.insuranceExpiry).state === 'expired' ||
+           pdpDocState(v.inspectionExpiry).state === 'expired';
+}
+
+// Why a vehicle cannot be used for a route ('' = it can be used)
+function pdpVehicleProblem(v) {
+    if (v.status === PDP_VEHICLE.REJECTED) return 'rejected by staff';
+    if (v.status !== PDP_VEHICLE.APPROVED) return 'waiting for staff approval';
+    if (pdpDocState(v.insuranceExpiry).state === 'expired') return 'insurance expired';
+    if (pdpDocState(v.inspectionExpiry).state === 'expired') return 'inspection expired';
+    return '';
+}
+
+// Orders of a courier's route that is running right now (status In Progress)
+function pdpActiveRouteOrders(courierName) {
+    return pdpGetOrders().filter(function (o) {
+        return o.courier === courierName && o.status === PDP_STATUS.IN_PROGRESS;
+    });
+}
+
+// Puts all unfinished orders of a courier back under "Available orders".
+// A delivery that was already on the road counts as a failed attempt.
+function pdpReleaseCourierOrders(courierName) {
+    const orders = pdpGetOrders();
+    let released = 0;
+    orders.forEach(function (o) {
+        if (o.courier !== courierName) return;
+        if (o.status !== PDP_STATUS.INITIATED && o.status !== PDP_STATUS.IN_PROGRESS) return;
+        if (o.status === PDP_STATUS.IN_PROGRESS) o.attempt += 1;
+        o.status = PDP_STATUS.INITIATED;
+        o.courier = null;
+        o.vehicle = null;
+        released++;
+    });
+    if (released) pdpSaveOrders(orders);
+    return released;
 }
 
 // Tracking number format used everywhere: RR- followed by 4 digits

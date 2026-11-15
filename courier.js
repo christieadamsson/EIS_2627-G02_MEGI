@@ -11,9 +11,8 @@
 // =========================================
 
 // Logged-in courier (falls back to the demo courier)
-let currentUser = null;
-try { currentUser = JSON.parse(localStorage.getItem('currentUser')); } catch (e) { currentUser = null; }
-const ME = (currentUser && currentUser.role === 'courier') ? currentUser.name : 'Miguel Santos';
+const currentUser = pdpCurrentUser();
+const ME = (currentUser && currentUser.role === 'courier') ? currentUser.name : PDP_DEMO_COURIER;
 document.getElementById('courier-name').textContent = ME;
 
 const message = document.getElementById('courier-msg');
@@ -53,12 +52,9 @@ function myVehicles() {
     return pdpGetVehicles().filter(function (v) { return v.courier === ME; });
 }
 
-// A vehicle can be used only if staff approved it and its documents are valid
+// A vehicle can be used only if staff approved it and its documents are valid (shared rule in data.js)
 function vehicleProblem(v) {
-    if (v.status !== 'Approved') return 'waiting for staff approval';
-    if (pdpDaysUntil(v.insuranceExpiry) < 0) return 'insurance expired';
-    if (pdpDaysUntil(v.inspectionExpiry) < 0) return 'inspection expired';
-    return '';
+    return pdpVehicleProblem(v);
 }
 
 function selectedVehicle() {
@@ -567,14 +563,18 @@ const vfError = document.getElementById('vf-error');
 let renewPlate = null;   // null = registering a new vehicle, else the plate being renewed
 
 function documentText(label, dateString) {
-    const days = pdpDaysUntil(dateString);
-    if (days < 0) return `<span class="doc-expired-text">${label} expired ${escapeHtml(dateString)}</span>`;
-    if (days <= 30) return `<span class="doc-warning">${label} expires in ${days} days</span>`;
+    const doc = pdpDocState(dateString);
+    if (doc.state === 'expired') return `<span class="doc-expired-text">${label} expired ${escapeHtml(dateString)}</span>`;
+    if (doc.state === 'soon') return `<span class="doc-warning">${label} expires in ${doc.daysLeft} days</span>`;
     return `${label} until ${escapeHtml(dateString)}`;
 }
 
 function vehicleBadge(v) {
-    if (v.status !== 'Approved') {
+    if (v.status === PDP_VEHICLE.REJECTED) {
+        return '<span class="status-badge status-cancelled">Rejected by staff</span>' +
+            (v.rejectReason ? `<div class="order-row-meta doc-expired-text">Reason: ${escapeHtml(v.rejectReason)}</div>` : '');
+    }
+    if (v.status !== PDP_VEHICLE.APPROVED) {
         return '<span class="status-badge status-initiated">Waiting for staff</span>';
     }
     if (vehicleProblem(v)) return '<span class="status-badge status-cancelled">Blocked – documents expired</span>';
@@ -604,7 +604,7 @@ function renderMyVehicles(route, started) {
                 </div>
                 <div class="order-row-actions">
                     <button type="button" class="btn-secondary" data-vehicle-action="renew" data-plate="${escapeHtml(v.plate)}"
-                        ${inUse ? 'disabled title="Finish your current route first"' : ''}>Renew documents</button>
+                        ${inUse ? 'disabled title="Finish your current route first"' : ''}>${v.status === PDP_VEHICLE.REJECTED ? 'Fix and resubmit' : 'Renew documents'}</button>
                 </div>
             </div>`;
     }).join('');
@@ -679,8 +679,9 @@ function submitVehicleForm(e) {
         insuranceExpiry: insurance,
         inspectionExpiry: inspection,
         certificateFile: file.name,     // upload is simulated: only the name is kept
-        status: 'Pending',
-        newDocument: true
+        status: PDP_VEHICLE.PENDING,
+        newDocument: true,
+        rejectReason: ''
     });
     pdpSaveVehicles(vehicles);
 

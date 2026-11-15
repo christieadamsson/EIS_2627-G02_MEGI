@@ -3,19 +3,16 @@
 // Spec: pending courier & vehicle approvals, with visual alerts
 //       for expired insurance / inspection.
 //
-// Needs data.js. Uses the SAME localStorage data as the other pages:
+// Needs data.js. Shares all data and rules with the courier page (3_courier.html):
 //   "registeredUsers" -> courier accounts (login.js). A courier registered on
 //                        1_login.html stays 'pending' until staff approves them.
-//   "pdpVehicles"     -> vehicles of the couriers (data.js). The courier page only
-//                        lets a courier use a vehicle staff set to 'Approved'
-//                        with valid documents.
-//   "pdpOrders"       -> orders (data.js). Approved couriers pick orders themselves
-//                        from "Available orders" on 3_courier.html.
+//   "pdpVehicles"     -> vehicles couriers register / renew on the courier page.
+//                        Staff sets them to 'Approved' or 'Rejected' (with a reason
+//                        the courier sees in "My vehicles").
+//   "pdpOrders"       -> orders. Approved couriers pick them from "Available orders".
+// Shared rules (document states, usable vehicles, courier status) live in data.js.
 // =========================================
 (function () {
-    const WARNING_DAYS = 30; // documents expiring within 30 days get a warning
-    const DEMO_COURIER = 'Miguel Santos'; // courier account built into login.js
-
     // --- 1. Storage helpers ---
 
     function readList(key) {
@@ -36,69 +33,41 @@
         return div.innerHTML;
     }
 
-    // --- 2. No made-up data: everything shown comes from real accounts ---
-    // Couriers: registered on 1_login.html (+ the demo courier in login.js).
-    // Vehicles: those of real couriers, as seen and registered on 3_courier.html.
-
-    // Removes the made-up couriers/vehicles that earlier versions of this page saved
+    // Removes the made-up couriers that earlier versions of this page saved
     function removeOldSampleData() {
         const fakeEmails = ['rui@pdp.pt', 'beatriz@pdp.pt', 'rui.oliveira@pdp.pt', 'joao.pereira@pdp.pt', 'ines.rocha@pdp.pt'];
         const users = readList('registeredUsers');
         const realUsers = users.filter(function (u) { return fakeEmails.indexOf(u.email) === -1; });
         if (realUsers.length !== users.length) saveList('registeredUsers', realUsers);
-
-        const fakePlates = ['45-XZ-78', 'BK-0012'];
-        const vehicles = pdpGetVehicles();
-        const realVehicles = vehicles.filter(function (v) { return fakePlates.indexOf(v.plate) === -1; });
-        if (realVehicles.length !== vehicles.length) pdpSaveVehicles(realVehicles);
-
         localStorage.removeItem('courierVehicles');
         localStorage.removeItem('staffSampleData');
     }
 
-    // --- 3. Checks ---
+    // --- 2. Small helpers on top of the shared rules in data.js ---
 
-    // 'active', 'pending', or 'unknown' when no such courier account exists
-    function courierStatus(name) {
-        if (name === DEMO_COURIER) return 'active';
-        const user = readList('registeredUsers').find(function (u) { return u.role === 'courier' && u.name === name; });
-        return user ? user.status : 'unknown';
-    }
-
-    // Only vehicles of real courier accounts (hides data.js samples of couriers that do not exist)
-    function courierVehicles() {
-        return pdpGetVehicles().filter(function (v) { return courierStatus(v.courier) !== 'unknown'; });
-    }
-
-    function checkDocument(dateString) {
-        const daysLeft = pdpDaysUntil(dateString);
-        if (daysLeft < 0) return { state: 'expired', daysLeft: daysLeft };
-        if (daysLeft <= WARNING_DAYS) return { state: 'soon', daysLeft: daysLeft };
-        return { state: 'valid', daysLeft: daysLeft };
-    }
-
-    function hasExpiredDocument(v) {
-        return checkDocument(v.insuranceExpiry).state === 'expired' ||
-               checkDocument(v.inspectionExpiry).state === 'expired';
+    // Number of orders this vehicle is carrying on a route that is running now
+    function ordersOnRoute(v) {
+        return pdpActiveRouteOrders(v.courier).filter(function (o) { return o.vehicle === v.plate; }).length;
     }
 
     function documentCell(dateString) {
-        const check = checkDocument(dateString);
+        const doc = pdpDocState(dateString);
         let note = 'Valid';
-        if (check.state === 'expired') note = 'Expired ' + Math.abs(check.daysLeft) + ' days ago';
-        if (check.state === 'soon') note = 'Expires in ' + check.daysLeft + ' days';
-        return `<span class="doc-date doc-${check.state}">${escapeHtml(dateString)}<small>${note}</small></span>`;
+        if (doc.state === 'expired') note = 'Expired ' + Math.abs(doc.daysLeft) + ' days ago';
+        if (doc.state === 'soon') note = 'Expires in ' + doc.daysLeft + ' days';
+        return `<span class="doc-date doc-${doc.state}">${escapeHtml(dateString)}<small>${note}</small></span>`;
     }
 
-    // --- 4. Rendering ---
+    // --- 3. Rendering ---
 
     function renderAlerts() {
         const container = document.getElementById('vehicle-alerts');
         const alerts = [];
 
-        courierVehicles().forEach(function (v) {
+        pdpCourierVehicles().forEach(function (v) {
+            if (v.status === PDP_VEHICLE.REJECTED) return;   // waiting for the courier, nothing to check
             [['Insurance', v.insuranceExpiry], ['Inspection', v.inspectionExpiry]].forEach(function (doc) {
-                const check = checkDocument(doc[1]);
+                const check = pdpDocState(doc[1]);
                 if (check.state === 'expired') {
                     alerts.push({ level: 'expired', text: `${doc[0]} of ${v.plate} (${v.courier}) expired on ${doc[1]}.` });
                 } else if (check.state === 'soon') {
@@ -153,11 +122,24 @@
         }).join('');
     }
 
+    function vehicleStatusCell(v, expired, onRoute) {
+        let badge = '<span class="badge-pending">Pending</span>';
+        if (v.status === PDP_VEHICLE.APPROVED) badge = '<span class="badge-delivered">Approved</span>';
+        if (v.status === PDP_VEHICLE.APPROVED && expired) badge = '<span class="badge-expired">Blocked – expired</span>';
+        if (v.status === PDP_VEHICLE.REJECTED) {
+            badge = '<span class="badge-expired">Rejected</span>' +
+                (v.rejectReason ? '<br><small>' + escapeHtml(v.rejectReason) + '</small>' : '') +
+                '<br><small>Waiting for the courier to resubmit</small>';
+        }
+        if (onRoute) badge += `<br><small>On a route now (${onRoute} order${onRoute > 1 ? 's' : ''})</small>`;
+        return badge;
+    }
+
     function renderVehicles() {
         const tbody = document.getElementById('vehicle-table-body');
-        const vehicles = courierVehicles();
+        const vehicles = pdpCourierVehicles();
         document.getElementById('pending-vehicles-count').textContent =
-            vehicles.filter(function (v) { return v.status === 'Pending'; }).length;
+            vehicles.filter(function (v) { return v.status === PDP_VEHICLE.PENDING; }).length;
 
         if (vehicles.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No vehicles registered.</td></tr>';
@@ -165,34 +147,32 @@
         }
 
         tbody.innerHTML = vehicles.map(function (v) {
-            const expired = hasExpiredDocument(v);
-            const courierPending = courierStatus(v.courier) === 'pending';
-
-            let statusBadge = '<span class="badge-pending">Pending</span>';
-            if (v.status === 'Approved') statusBadge = '<span class="badge-delivered">Approved</span>';
-            if (v.status === 'Approved' && expired) statusBadge = '<span class="badge-expired">Blocked – expired</span>';
+            const expired = pdpHasExpiredDocument(v);
+            const courierPending = pdpCourierStatus(v.courier) === 'pending';
+            const onRoute = ordersOnRoute(v);
 
             let actions = '';
-            if (v.status === 'Pending') {
-                const blockReason = expired ? 'Documents expired' : (courierPending ? 'Approve the courier first' : '');
+            if (v.status === PDP_VEHICLE.PENDING) {
+                const approveBlock = expired ? 'Documents expired' : (courierPending ? 'Approve the courier first' : '');
                 actions = `
                     <button class="btn-approve" data-action="approve-vehicle" data-id="${escapeHtml(v.plate)}"
-                        ${blockReason ? 'disabled title="' + blockReason + '"' : ''}>Approve</button>
-                    <button class="btn-reject" data-action="reject-vehicle" data-id="${escapeHtml(v.plate)}">Reject</button>`;
+                        ${approveBlock ? 'disabled title="' + approveBlock + '"' : ''}>Approve</button>
+                    <button class="btn-reject" data-action="reject-vehicle" data-id="${escapeHtml(v.plate)}"
+                        ${onRoute ? 'disabled title="In use on an active route"' : ''}>Reject</button>`;
             }
-            if (v.newDocument) {
+            if (v.newDocument && v.status !== PDP_VEHICLE.REJECTED) {
                 actions += `<button class="btn-review" data-action="review-vehicle" data-id="${escapeHtml(v.plate)}">Mark reviewed</button>`;
             }
 
             return `
-                <tr class="${expired ? 'row-expired' : ''}">
+                <tr class="${expired && v.status !== PDP_VEHICLE.REJECTED ? 'row-expired' : ''}">
                     <td class="order-id">${escapeHtml(v.plate)}</td>
                     <td><strong>${escapeHtml(v.model)}</strong><br><small>${escapeHtml(v.type)} · ${escapeHtml(v.maxWeightKg)} kg · ${escapeHtml(v.maxVolM3)} m³</small>
                         ${v.certificateFile ? '<br><small>Certificate: ' + escapeHtml(v.certificateFile) + '</small>' : ''}</td>
                     <td>${escapeHtml(v.courier)}${courierPending ? '<br><small>Courier pending</small>' : ''}</td>
                     <td>${documentCell(v.insuranceExpiry)}</td>
                     <td>${documentCell(v.inspectionExpiry)}</td>
-                    <td>${statusBadge}</td>
+                    <td>${vehicleStatusCell(v, expired, onRoute)}</td>
                     <td><div class="approval-actions">${actions}</div></td>
                 </tr>`;
         }).join('');
@@ -204,7 +184,7 @@
         renderVehicles();
     }
 
-    // --- 5. Approve / reject actions ---
+    // --- 4. Approve / reject actions ---
 
     function approveCourier(username) {
         const users = readList('registeredUsers');
@@ -223,6 +203,10 @@
         users.splice(index, 1);
         saveList('registeredUsers', users);
         pdpSaveVehicles(pdpGetVehicles().filter(function (v) { return v.courier !== courier.name; }));
+
+        // Safety net: unfinished orders of this courier go back to "Available orders"
+        const released = pdpReleaseCourierOrders(courier.name);
+        if (released) alert(`${released} order(s) of ${courier.name} were returned to the available orders.`);
     }
 
     function updateVehicle(plate, change) {
@@ -235,15 +219,27 @@
 
     function approveVehicle(plate) {
         const vehicle = updateVehicle(plate, function (v) {
-            v.status = 'Approved';
+            v.status = PDP_VEHICLE.APPROVED;
             v.newDocument = false;
+            v.rejectReason = '';
         });
         alert(`Vehicle ${vehicle.plate} approved. ${vehicle.courier} can now select it on the courier page.`);
     }
 
+    // The vehicle is kept with status 'Rejected' so the courier sees why and can resubmit
     function rejectVehicle(plate) {
-        if (!confirm(`Reject vehicle ${plate}?`)) return;
-        pdpSaveVehicles(pdpGetVehicles().filter(function (v) { return v.plate !== plate; }));
+        const vehicle = pdpGetVehicles().find(function (v) { return v.plate === plate; });
+        if (ordersOnRoute(vehicle)) {
+            alert(`${plate} is in use on an active route and cannot be rejected now.`);
+            return;
+        }
+        const reason = prompt(`Why is ${plate} rejected? The courier will see this reason.`, '');
+        if (reason === null) return;   // cancelled
+        updateVehicle(plate, function (v) {
+            v.status = PDP_VEHICLE.REJECTED;
+            v.newDocument = false;
+            v.rejectReason = reason.trim() || 'No reason given';
+        });
     }
 
     function reviewVehicle(plate) {
@@ -269,7 +265,7 @@
     // Refresh when another tab (e.g. the courier page) changes the data
     window.addEventListener('storage', renderStaffPanel);
 
-    // --- 6. Start ---
+    // --- 5. Start ---
 
     document.addEventListener('DOMContentLoaded', function () {
         removeOldSampleData();
