@@ -2,7 +2,8 @@
 // Admin panel (4_admin.html) – operational KPIs + edit/remove users
 // Reads the same localStorage lists as the other pages:
 //   "registeredUsers" -> accounts created on 1_login.html (login.js)
-//   "courierVehicles" -> vehicles audited by staff (staff.js)
+//   "pdpOrders"       -> orders shared with client/courier pages (data.js)
+//   "pdpVehicles"     -> vehicles audited by staff (data.js, staff.js)
 //   "pendingStaff"    -> staff waiting for admin approval (scripts.js)
 //   "adminUsers"      -> users approved by the admin (scripts.js)
 // =========================================
@@ -33,16 +34,17 @@
     // --- 2. Operational KPIs ---
 
     function calculateKpis() {
-        const orders = typeof dispatchData !== 'undefined' ? dispatchData : [];
+        const orders = pdpGetOrders();
         const registered = readJSON('registeredUsers', []);
-        const vehicles = readJSON('courierVehicles', []);
+        const vehicles = pdpGetVehicles();
         const pendingStaff = readJSON('pendingStaff', [
             { name: 'Johan Lindström' }, { name: 'Elin Berg' } // same default as scripts.js
         ]);
 
-        const delivered = orders.filter(function (o) { return o.status === 'Delivered'; }).length;
-        const inTransit = orders.filter(function (o) { return o.status === 'In transit'; }).length;
-        const unassigned = orders.filter(function (o) { return o.courier === 'Assign...'; }).length;
+        const delivered = orders.filter(function (o) { return o.status === PDP_STATUS.COMPLETED; }).length;
+        const inTransit = orders.filter(function (o) { return o.status === PDP_STATUS.IN_PROGRESS; }).length;
+        // Waiting under "Available orders" on the courier page
+        const unassigned = orders.filter(function (o) { return !o.courier && o.status === PDP_STATUS.INITIATED; }).length;
         const deliveryRate = orders.length ? Math.round((delivered / orders.length) * 100) : 0;
 
         const couriers = registered.filter(function (u) { return u.role === 'courier'; });
@@ -53,14 +55,14 @@
         let expiredDocs = 0;
         let expiringDocs = 0;
         vehicles.forEach(function (v) {
-            [v.insurance_expiry_date, v.inspection_expiry_date].forEach(function (date) {
+            [v.insuranceExpiry, v.inspectionExpiry].forEach(function (date) {
                 const left = daysUntil(date);
                 if (left < 0) expiredDocs++;
                 else if (left <= WARNING_DAYS) expiringDocs++;
             });
         });
-        const approvedVehicles = vehicles.filter(function (v) { return v.status === 'approved'; }).length;
-        const pendingVehicles = vehicles.filter(function (v) { return v.status === 'pending'; }).length;
+        const approvedVehicles = vehicles.filter(function (v) { return v.status === 'Approved'; }).length;
+        const pendingVehicles = vehicles.filter(function (v) { return v.status === 'Pending'; }).length;
 
         return [
             { group: 'Orders', items: [
@@ -103,6 +105,44 @@
                                 </div>`;
                         }).join('')}
                     </div>
+                </div>`;
+        }).join('');
+    }
+
+    // --- 2b. Deliveries chart: completed orders per day, last 7 days ---
+    // Same orders as the "Delivered" KPI (status Completed, day = completedAt).
+
+    function deliveriesLastWeek() {
+        const orders = pdpGetOrders().filter(function (o) { return o.status === PDP_STATUS.COMPLETED; });
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = pdpDaysFromToday(-i);
+            days.push({
+                label: i === 0 ? 'Today' : new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' }),
+                date: date,
+                count: orders.filter(function (o) { return o.completedAt === date; }).length
+            });
+        }
+        return days;
+    }
+
+    function renderDeliveryChart() {
+        const container = document.getElementById('chart-container');
+        if (!container) return;
+
+        const days = deliveriesLastWeek();
+        const total = days.reduce(function (sum, d) { return sum + d.count; }, 0);
+        const max = Math.max(1, Math.max.apply(null, days.map(function (d) { return d.count; })));
+
+        document.getElementById('chart-total').textContent =
+            total + ' order(s) delivered in the last 7 days · same data as the "Delivered" KPI above';
+
+        container.innerHTML = days.map(function (d) {
+            return `
+                <div class="bar-group" title="${d.date}: ${d.count} delivered">
+                    <span class="bar-count">${d.count}</span>
+                    <div class="bar ${d.count === 0 ? 'bar-zero' : ''}" style="--bar-height: ${(d.count / max) * 100}%;"></div>
+                    <span class="bar-day">${d.label}</span>
                 </div>`;
         }).join('');
     }
@@ -268,6 +308,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         renderKpis();
+        renderDeliveryChart(); // replaces the static chart from scripts.js
         setupUserList();
         renderUserList();
     });
