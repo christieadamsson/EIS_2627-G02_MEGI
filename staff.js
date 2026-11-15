@@ -1,13 +1,20 @@
 // =========================================
-// Staff panel (5_staff.html) – courier & vehicle approvals
-// Connected to the courier side through localStorage:
-//   "registeredUsers" -> couriers who registered on 1_login.html (login.js).
-//                        They stay 'pending' until staff approves them here.
-//   "courierVehicles" -> vehicles registered by couriers, audited by staff.
+// Staff panel (5_staff.html)
+// Spec: pending courier & vehicle approvals, with visual alerts
+//       for expired insurance / inspection.
+//
+// Needs data.js. Uses the SAME localStorage data as the other pages:
+//   "registeredUsers" -> courier accounts (login.js). A courier registered on
+//                        1_login.html stays 'pending' until staff approves them.
+//   "pdpVehicles"     -> vehicles of the couriers (data.js). The courier page only
+//                        lets a courier use a vehicle staff set to 'Approved'
+//                        with valid documents.
+//   "pdpOrders"       -> orders (data.js). Approved couriers pick orders themselves
+//                        from "Available orders" on 3_courier.html.
 // =========================================
 (function () {
-    const DAY = 24 * 60 * 60 * 1000;
     const WARNING_DAYS = 30; // documents expiring within 30 days get a warning
+    const DEMO_COURIER = 'Miguel Santos'; // courier account built into login.js
 
     // --- 1. Storage helpers ---
 
@@ -23,56 +30,56 @@
         localStorage.setItem(key, JSON.stringify(list));
     }
 
-    // Date "n" days from today as YYYY-MM-DD, so the sample alerts always work
-    function dateFromToday(days) {
-        return new Date(Date.now() + days * DAY).toISOString().slice(0, 10);
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
     }
 
-    // --- 2. Sample test data (only added the first time) ---
+    // --- 2. No made-up data: everything shown comes from real accounts ---
+    // Couriers: registered on 1_login.html (+ the demo courier in login.js).
+    // Vehicles: those of real couriers, as seen and registered on 3_courier.html.
 
-    function seedSampleData() {
-        if (localStorage.getItem('staffSampleData')) return;
-
+    // Removes the made-up couriers/vehicles that earlier versions of this page saved
+    function removeOldSampleData() {
+        const fakeEmails = ['rui@pdp.pt', 'beatriz@pdp.pt', 'rui.oliveira@pdp.pt', 'joao.pereira@pdp.pt', 'ines.rocha@pdp.pt'];
         const users = readList('registeredUsers');
-        users.push(
-            { name: 'Rui Almeida',   username: 'rui.almeida',   email: 'rui@pdp.pt',      phone: '912345678', nif: '234567890',
-              password: 'courier123', role: 'courier', status: 'pending', created_at: new Date().toISOString() },
-            { name: 'Beatriz Nunes', username: 'beatriz.nunes', email: 'beatriz@pdp.pt',  phone: '936543210', nif: '245678901',
-              password: 'courier123', role: 'courier', status: 'pending', created_at: new Date().toISOString() }
-        );
-        saveList('registeredUsers', users);
+        const realUsers = users.filter(function (u) { return fakeEmails.indexOf(u.email) === -1; });
+        if (realUsers.length !== users.length) saveList('registeredUsers', realUsers);
 
-        saveList('courierVehicles', [
-            { plate: 'AA-12-BC', model: 'Renault Kangoo', type: 'Van',   courier: 'Miguel Santos',
-              max_weight_kg: 650, max_vol_m3: 3.3,
-              insurance_expiry_date: dateFromToday(200), inspection_expiry_date: dateFromToday(-5),
-              doc_updated: false, status: 'pending' },
-            { plate: '45-XZ-78', model: 'Honda PCX 125',  type: 'Moto',  courier: 'Rui Almeida',
-              max_weight_kg: 30, max_vol_m3: 0.15,
-              insurance_expiry_date: dateFromToday(12), inspection_expiry_date: dateFromToday(300),
-              doc_updated: false, status: 'pending' },
-            { plate: 'BK-0007',  model: 'Urban Cargo Bike', type: 'Bike', courier: 'Beatriz Nunes',
-              max_weight_kg: 40, max_vol_m3: 0.2,
-              insurance_expiry_date: dateFromToday(365), inspection_expiry_date: dateFromToday(365),
-              doc_updated: true, status: 'pending' },
-            { plate: '12-AB-34', model: 'Iveco Daily',    type: 'Truck', courier: 'Miguel Santos',
-              max_weight_kg: 3500, max_vol_m3: 12,
-              insurance_expiry_date: dateFromToday(-20), inspection_expiry_date: dateFromToday(100),
-              doc_updated: false, status: 'approved' }
-        ]);
+        const fakePlates = ['45-XZ-78', 'BK-0012'];
+        const vehicles = pdpGetVehicles();
+        const realVehicles = vehicles.filter(function (v) { return fakePlates.indexOf(v.plate) === -1; });
+        if (realVehicles.length !== vehicles.length) pdpSaveVehicles(realVehicles);
 
-        localStorage.setItem('staffSampleData', 'done');
+        localStorage.removeItem('courierVehicles');
+        localStorage.removeItem('staffSampleData');
     }
 
-    // --- 3. Document checks (insurance / inspection) ---
+    // --- 3. Checks ---
 
-    // Returns 'expired', 'soon' or 'valid' plus the days left
+    // 'active', 'pending', or 'unknown' when no such courier account exists
+    function courierStatus(name) {
+        if (name === DEMO_COURIER) return 'active';
+        const user = readList('registeredUsers').find(function (u) { return u.role === 'courier' && u.name === name; });
+        return user ? user.status : 'unknown';
+    }
+
+    // Only vehicles of real courier accounts (hides data.js samples of couriers that do not exist)
+    function courierVehicles() {
+        return pdpGetVehicles().filter(function (v) { return courierStatus(v.courier) !== 'unknown'; });
+    }
+
     function checkDocument(dateString) {
-        const today = new Date(new Date().toISOString().slice(0, 10));
-        const daysLeft = Math.round((new Date(dateString) - today) / DAY);
+        const daysLeft = pdpDaysUntil(dateString);
         if (daysLeft < 0) return { state: 'expired', daysLeft: daysLeft };
         if (daysLeft <= WARNING_DAYS) return { state: 'soon', daysLeft: daysLeft };
         return { state: 'valid', daysLeft: daysLeft };
+    }
+
+    function hasExpiredDocument(v) {
+        return checkDocument(v.insuranceExpiry).state === 'expired' ||
+               checkDocument(v.inspectionExpiry).state === 'expired';
     }
 
     function documentCell(dateString) {
@@ -80,29 +87,17 @@
         let note = 'Valid';
         if (check.state === 'expired') note = 'Expired ' + Math.abs(check.daysLeft) + ' days ago';
         if (check.state === 'soon') note = 'Expires in ' + check.daysLeft + ' days';
-        return `<span class="doc-date doc-${check.state}">${dateString}<small>${note}</small></span>`;
-    }
-
-    function hasExpiredDocument(vehicle) {
-        return checkDocument(vehicle.insurance_expiry_date).state === 'expired' ||
-               checkDocument(vehicle.inspection_expiry_date).state === 'expired';
-    }
-
-    function isCourierPending(courierName) {
-        return readList('registeredUsers').some(function (u) {
-            return u.role === 'courier' && u.status === 'pending' && u.name === courierName;
-        });
+        return `<span class="doc-date doc-${check.state}">${escapeHtml(dateString)}<small>${note}</small></span>`;
     }
 
     // --- 4. Rendering ---
 
     function renderAlerts() {
         const container = document.getElementById('vehicle-alerts');
-        if (!container) return;
-
         const alerts = [];
-        readList('courierVehicles').forEach(function (v) {
-            [['Insurance', v.insurance_expiry_date], ['Inspection', v.inspection_expiry_date]].forEach(function (doc) {
+
+        courierVehicles().forEach(function (v) {
+            [['Insurance', v.insuranceExpiry], ['Inspection', v.inspectionExpiry]].forEach(function (doc) {
                 const check = checkDocument(doc[1]);
                 if (check.state === 'expired') {
                     alerts.push({ level: 'expired', text: `${doc[0]} of ${v.plate} (${v.courier}) expired on ${doc[1]}.` });
@@ -110,7 +105,7 @@
                     alerts.push({ level: 'soon', text: `${doc[0]} of ${v.plate} (${v.courier}) expires in ${check.daysLeft} days.` });
                 }
             });
-            if (v.doc_updated) {
+            if (v.newDocument) {
                 alerts.push({ level: 'updated', text: `New certificate uploaded for ${v.plate} (${v.courier}). Please review.` });
             }
         });
@@ -119,20 +114,24 @@
             container.innerHTML = '<p class="empty-msg">No alerts. All vehicle documents are valid.</p>';
             return;
         }
-
         container.innerHTML = alerts.map(function (a) {
-            return `<div class="alert alert-${a.level}">${a.text}</div>`;
+            return `<div class="alert alert-${a.level}">${escapeHtml(a.text)}</div>`;
         }).join('');
     }
 
     function renderPendingCouriers() {
         const container = document.getElementById('pending-couriers');
-        if (!container) return;
-
         const pending = readList('registeredUsers').filter(function (u) {
             return u.role === 'courier' && u.status === 'pending';
         });
+        const available = pdpGetOrders().filter(function (o) {
+            return !o.courier && o.status === PDP_STATUS.INITIATED;
+        }).length;
+
         document.getElementById('pending-couriers-count').textContent = pending.length;
+        document.getElementById('pending-couriers-info').textContent =
+            available + ' order(s) are waiting under "Available orders" on the courier page. ' +
+            'A courier can take them after you approve their account and they register a vehicle there for approval below.';
 
         if (pending.length === 0) {
             container.innerHTML = '<p class="empty-msg">No couriers waiting for approval.</p>';
@@ -143,12 +142,12 @@
             return `
                 <li class="user-item">
                     <div>
-                        <div class="user-name">${c.name}</div>
-                        <div class="user-role">${c.email} · Phone ${c.phone} · NIF ${c.nif} · Registered ${c.created_at.slice(0, 10)}</div>
+                        <div class="user-name">${escapeHtml(c.name)}</div>
+                        <div class="user-role">${escapeHtml(c.email)} · Phone ${escapeHtml(c.phone)} · NIF ${escapeHtml(c.nif)} · Registered ${escapeHtml((c.created_at || '').slice(0, 10))}</div>
                     </div>
                     <div class="approval-actions">
-                        <button class="btn-approve" data-action="approve-courier" data-id="${c.username}">Approve</button>
-                        <button class="btn-reject" data-action="reject-courier" data-id="${c.username}">Reject</button>
+                        <button class="btn-approve" data-action="approve-courier" data-id="${escapeHtml(c.username)}">Approve</button>
+                        <button class="btn-reject" data-action="reject-courier" data-id="${escapeHtml(c.username)}">Reject</button>
                     </div>
                 </li>`;
         }).join('');
@@ -156,11 +155,9 @@
 
     function renderVehicles() {
         const tbody = document.getElementById('vehicle-table-body');
-        if (!tbody) return;
-
-        const vehicles = readList('courierVehicles');
+        const vehicles = courierVehicles();
         document.getElementById('pending-vehicles-count').textContent =
-            vehicles.filter(function (v) { return v.status === 'pending'; }).length;
+            vehicles.filter(function (v) { return v.status === 'Pending'; }).length;
 
         if (vehicles.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">No vehicles registered.</td></tr>';
@@ -169,30 +166,32 @@
 
         tbody.innerHTML = vehicles.map(function (v) {
             const expired = hasExpiredDocument(v);
-            const courierPending = isCourierPending(v.courier);
+            const courierPending = courierStatus(v.courier) === 'pending';
+
             let statusBadge = '<span class="badge-pending">Pending</span>';
-            if (v.status === 'approved') statusBadge = '<span class="badge-delivered">Approved</span>';
-            if (v.status === 'approved' && expired) statusBadge = '<span class="badge-expired">Blocked – expired</span>';
+            if (v.status === 'Approved') statusBadge = '<span class="badge-delivered">Approved</span>';
+            if (v.status === 'Approved' && expired) statusBadge = '<span class="badge-expired">Blocked – expired</span>';
 
             let actions = '';
-            if (v.status === 'pending') {
+            if (v.status === 'Pending') {
                 const blockReason = expired ? 'Documents expired' : (courierPending ? 'Approve the courier first' : '');
                 actions = `
-                    <button class="btn-approve" data-action="approve-vehicle" data-id="${v.plate}"
+                    <button class="btn-approve" data-action="approve-vehicle" data-id="${escapeHtml(v.plate)}"
                         ${blockReason ? 'disabled title="' + blockReason + '"' : ''}>Approve</button>
-                    <button class="btn-reject" data-action="reject-vehicle" data-id="${v.plate}">Reject</button>`;
+                    <button class="btn-reject" data-action="reject-vehicle" data-id="${escapeHtml(v.plate)}">Reject</button>`;
             }
-            if (v.doc_updated) {
-                actions += `<button class="btn-review" data-action="review-vehicle" data-id="${v.plate}">Mark reviewed</button>`;
+            if (v.newDocument) {
+                actions += `<button class="btn-review" data-action="review-vehicle" data-id="${escapeHtml(v.plate)}">Mark reviewed</button>`;
             }
 
             return `
                 <tr class="${expired ? 'row-expired' : ''}">
-                    <td class="order-id">${v.plate}</td>
-                    <td><strong>${v.model}</strong><br><small>${v.type} · ${v.max_weight_kg} kg · ${v.max_vol_m3} m³</small></td>
-                    <td>${v.courier}</td>
-                    <td>${documentCell(v.insurance_expiry_date)}</td>
-                    <td>${documentCell(v.inspection_expiry_date)}</td>
+                    <td class="order-id">${escapeHtml(v.plate)}</td>
+                    <td><strong>${escapeHtml(v.model)}</strong><br><small>${escapeHtml(v.type)} · ${escapeHtml(v.maxWeightKg)} kg · ${escapeHtml(v.maxVolM3)} m³</small>
+                        ${v.certificateFile ? '<br><small>Certificate: ' + escapeHtml(v.certificateFile) + '</small>' : ''}</td>
+                    <td>${escapeHtml(v.courier)}${courierPending ? '<br><small>Courier pending</small>' : ''}</td>
+                    <td>${documentCell(v.insuranceExpiry)}</td>
+                    <td>${documentCell(v.inspectionExpiry)}</td>
                     <td>${statusBadge}</td>
                     <td><div class="approval-actions">${actions}</div></td>
                 </tr>`;
@@ -212,48 +211,43 @@
         const courier = users.find(function (u) { return u.username === username; });
         courier.status = 'active'; // login.js now lets this courier log in
         saveList('registeredUsers', users);
-        alert(`${courier.name} is approved and can now log in as a courier.`);
+        alert(`${courier.name} is approved and can now log in as a courier. ` +
+              `They can now register a vehicle on the courier page; it will appear below for approval.`);
     }
 
     function rejectCourier(username) {
         const users = readList('registeredUsers');
         const index = users.findIndex(function (u) { return u.username === username; });
         const courier = users[index];
-        if (!confirm(`Reject ${courier.name}? Their account will be removed.`)) return;
+        if (!confirm(`Reject ${courier.name}? Their account and vehicles will be removed.`)) return;
         users.splice(index, 1);
         saveList('registeredUsers', users);
-
-        // Vehicles of a rejected courier cannot be approved either
-        saveList('courierVehicles', readList('courierVehicles').filter(function (v) {
-            return v.courier !== courier.name;
-        }));
+        pdpSaveVehicles(pdpGetVehicles().filter(function (v) { return v.courier !== courier.name; }));
     }
 
     function updateVehicle(plate, change) {
-        const vehicles = readList('courierVehicles');
+        const vehicles = pdpGetVehicles();
         const vehicle = vehicles.find(function (v) { return v.plate === plate; });
-        change(vehicle, vehicles);
-        saveList('courierVehicles', vehicles);
+        change(vehicle);
+        pdpSaveVehicles(vehicles);
         return vehicle;
     }
 
     function approveVehicle(plate) {
         const vehicle = updateVehicle(plate, function (v) {
-            v.status = 'approved';
-            v.doc_updated = false;
+            v.status = 'Approved';
+            v.newDocument = false;
         });
-        alert(`Vehicle ${vehicle.plate} approved. ${vehicle.courier} can now use it for orders.`);
+        alert(`Vehicle ${vehicle.plate} approved. ${vehicle.courier} can now select it on the courier page.`);
     }
 
     function rejectVehicle(plate) {
         if (!confirm(`Reject vehicle ${plate}?`)) return;
-        saveList('courierVehicles', readList('courierVehicles').filter(function (v) {
-            return v.plate !== plate;
-        }));
+        pdpSaveVehicles(pdpGetVehicles().filter(function (v) { return v.plate !== plate; }));
     }
 
     function reviewVehicle(plate) {
-        updateVehicle(plate, function (v) { v.doc_updated = false; });
+        updateVehicle(plate, function (v) { v.newDocument = false; });
     }
 
     const actions = {
@@ -272,10 +266,13 @@
         renderStaffPanel();
     });
 
+    // Refresh when another tab (e.g. the courier page) changes the data
+    window.addEventListener('storage', renderStaffPanel);
+
     // --- 6. Start ---
 
     document.addEventListener('DOMContentLoaded', function () {
-        seedSampleData();
+        removeOldSampleData();
         renderStaffPanel();
     });
 })();

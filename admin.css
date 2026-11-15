@@ -151,3 +151,22 @@
 @media (max-width: 700px) {
     .user-item { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
+
+/* Deliveries chart (admin.js) */
+.chart-total {
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: #5e6c84;
+}
+
+.bar-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: #172b4d;
+    margin-bottom: 4px;
+}
+
+.bar.bar-zero {
+    min-height: 3px;
+    background-color: #e2e8f0;
+}

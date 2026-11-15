@@ -40,10 +40,6 @@
     </section>
   
     <main class="dashboard">
-      <!-- 1. Dynamik KPI -->
-      <section class="stats-grid" id="stats-container">
-      </section>
-
       <!-- Operational KPIs, calculated from the live data (admin.js) -->
       <section class="card">
         <h2>OPERATIONAL KPIs</h2>
@@ -51,9 +47,10 @@
         </div>
       </section>
 
-      <!-- Diagram -->
+      <!-- Deliveries per day, from the same orders as the KPIs (admin.js) -->
       <section class="card">
-        <h2>DELIVERIES THIS WEEK</h2>
+        <h2>DELIVERIES – LAST 7 DAYS</h2>
+        <p class="chart-total" id="chart-total"></p>
         <div class="bar-chart" id="chart-container">
         </div>
       </section>
@@ -74,6 +71,7 @@
     </main>
 
 
+    <script src="data.js" defer></script>
     <script src="scripts.js" defer></script>
     <script src="admin.js" defer></script>
 

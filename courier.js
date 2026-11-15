@@ -354,6 +354,7 @@ function render() {
     document.getElementById('stat-completed').textContent = completed.length;
 
     renderVehicleSelect(route, started);
+    renderMyVehicles(route, started);
     renderLoad(route);
     renderRoute(route, started);
     renderAvailable(available, started);
@@ -553,6 +554,153 @@ document.getElementById('btn-pod-cancel').addEventListener('click', closePod);
 document.getElementById('btn-pod-submit').addEventListener('click', submitPod);
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !overlay.hidden) closePod();
+});
+
+
+// --- 4b. My vehicles: register a vehicle / renew documents ---
+// Everything sent here gets status 'Pending' in pdpVehicles (data.js) and shows up
+// under "Vehicle Approvals" and "Document Alerts" on the staff page (5_staff.html).
+// The vehicle can only be used for a route after staff approves it.
+
+const vehicleForm = document.getElementById('vehicle-form');
+const vfError = document.getElementById('vf-error');
+let renewPlate = null;   // null = registering a new vehicle, else the plate being renewed
+
+function documentText(label, dateString) {
+    const days = pdpDaysUntil(dateString);
+    if (days < 0) return `<span class="doc-expired-text">${label} expired ${escapeHtml(dateString)}</span>`;
+    if (days <= 30) return `<span class="doc-warning">${label} expires in ${days} days</span>`;
+    return `${label} until ${escapeHtml(dateString)}`;
+}
+
+function vehicleBadge(v) {
+    if (v.status !== 'Approved') {
+        return '<span class="status-badge status-initiated">Waiting for staff</span>';
+    }
+    if (vehicleProblem(v)) return '<span class="status-badge status-cancelled">Blocked – documents expired</span>';
+    return '<span class="status-badge status-completed">Approved</span>';
+}
+
+function renderMyVehicles(route, started) {
+    const list = document.getElementById('my-vehicles-list');
+    const vehicles = myVehicles();
+    const routeVehicle = started ? route[0].vehicle : null;
+
+    if (vehicles.length === 0) {
+        list.innerHTML = '<p class="empty-text">You have no vehicles yet. Register one to start taking orders.</p>';
+        return;
+    }
+
+    list.innerHTML = vehicles.map(function (v) {
+        const inUse = v.plate === routeVehicle;
+        return `
+            <div class="order-row">
+                <div>
+                    <div class="order-row-id">${escapeHtml(v.plate)}</div>
+                    <div class="order-row-name">${escapeHtml(v.model)}</div>
+                    <div class="order-row-meta">${escapeHtml(v.type)} · max ${escapeHtml(v.maxWeightKg)} kg · ${escapeHtml(v.maxVolM3)} m³</div>
+                    <div class="order-row-meta">${documentText('Insurance', v.insuranceExpiry)} · ${documentText('Inspection', v.inspectionExpiry)}</div>
+                    ${vehicleBadge(v)}
+                </div>
+                <div class="order-row-actions">
+                    <button type="button" class="btn-secondary" data-vehicle-action="renew" data-plate="${escapeHtml(v.plate)}"
+                        ${inUse ? 'disabled title="Finish your current route first"' : ''}>Renew documents</button>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function openVehicleForm(plate) {
+    renewPlate = plate || null;
+    vehicleForm.reset();
+    vfError.textContent = '';
+
+    const today = pdpDaysFromToday(0);
+    document.getElementById('vf-insurance').min = today;
+    document.getElementById('vf-inspection').min = today;
+
+    document.getElementById('vf-details').hidden = renewPlate !== null;
+    document.getElementById('vehicle-form-title').textContent =
+        renewPlate ? 'Renew documents – ' + renewPlate : 'Register a vehicle';
+
+    if (renewPlate) {
+        const v = myVehicles().find(function (x) { return x.plate === renewPlate; });
+        document.getElementById('vf-insurance').value = v.insuranceExpiry;
+        document.getElementById('vf-inspection').value = v.inspectionExpiry;
+    }
+
+    vehicleForm.hidden = false;
+    vehicleForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function closeVehicleForm() {
+    vehicleForm.hidden = true;
+    renewPlate = null;
+}
+
+function submitVehicleForm(e) {
+    e.preventDefault();
+    vfError.textContent = '';
+
+    function fail(text) { vfError.textContent = text; }
+
+    const insurance = document.getElementById('vf-insurance').value;
+    const inspection = document.getElementById('vf-inspection').value;
+    const file = document.getElementById('vf-certificate').files[0];
+
+    const vehicles = pdpGetVehicles();
+    let vehicle;
+
+    if (renewPlate === null) {
+        const plate = document.getElementById('vf-plate').value.trim().toUpperCase();
+        const model = document.getElementById('vf-model').value.trim();
+        const weight = Number(document.getElementById('vf-weight').value);
+        const volume = Number(document.getElementById('vf-volume').value);
+
+        if (!/^[A-Z0-9-]{5,10}$/.test(plate)) return fail('Please enter a valid plate (letters, digits and "-").');
+        if (vehicles.some(function (v) { return v.plate === plate; })) return fail('A vehicle with plate ' + plate + ' is already registered.');
+        if (model.length < 2) return fail('Please enter the vehicle model.');
+        if (!(weight > 0)) return fail('Please enter the maximum weight in kg.');
+        if (!(volume > 0)) return fail('Please enter the maximum volume in m³.');
+
+        vehicle = { plate: plate, model: model, type: document.getElementById('vf-type').value, courier: ME,
+                    maxWeightKg: weight, maxVolM3: volume };
+        vehicles.push(vehicle);
+    } else {
+        vehicle = vehicles.find(function (v) { return v.plate === renewPlate; });
+    }
+
+    if (!insurance || !inspection) return fail('Please enter both expiry dates.');
+    if (pdpDaysUntil(insurance) < 0 || pdpDaysUntil(inspection) < 0) return fail('The documents must still be valid (date today or later).');
+    if (!file) return fail('Please attach the certificate.');
+
+    // Staff has to (re)approve the vehicle before it can be used
+    Object.assign(vehicle, {
+        insuranceExpiry: insurance,
+        inspectionExpiry: inspection,
+        certificateFile: file.name,     // upload is simulated: only the name is kept
+        status: 'Pending',
+        newDocument: true
+    });
+    pdpSaveVehicles(vehicles);
+
+    showMessage('success', (renewPlate ? 'New documents for ' : 'Vehicle ') + vehicle.plate +
+        ' sent to staff for approval. You can use it once it is approved.');
+    closeVehicleForm();
+    render();
+}
+
+document.getElementById('btn-new-vehicle').addEventListener('click', function () { openVehicleForm(null); });
+document.getElementById('btn-vehicle-cancel').addEventListener('click', closeVehicleForm);
+vehicleForm.addEventListener('submit', submitVehicleForm);
+document.getElementById('my-vehicles-list').addEventListener('click', function (e) {
+    const button = e.target.closest('button[data-vehicle-action="renew"]');
+    if (button) openVehicleForm(button.dataset.plate);
+});
+
+// Staff approves vehicles on 5_staff.html: refresh when that happens in another tab
+window.addEventListener('storage', function (e) {
+    if (e.key === 'pdpVehicles' || e.key === 'pdpOrders') render();
 });
 
 
