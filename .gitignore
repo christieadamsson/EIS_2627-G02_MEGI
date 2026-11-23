@@ -1,0 +1,7 @@
+# Real database password file - never commit this
+backend/config/config.php
+
+# Computer and editor clutter
+.DS_Store
+Thumbs.db
+.vscode/
