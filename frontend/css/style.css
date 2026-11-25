@@ -2357,3 +2357,76 @@ footer {
     display: inline-block;
     text-decoration: none;
 }
+
+/* =========================================
+   Header while logged in: "My account" + "Log out" (data.js pdpSetupLoginButton)
+   ========================================= */
+.header-account {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-account {
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 8px 20px;
+    border: 2px solid #6bd0f6;
+    border-radius: 25px;
+    text-decoration: none;
+}
+
+.btn-account:hover,
+.btn-account.active {
+    background-color: #eaf8fe;
+}
+
+/* =========================================
+   My account page (8_profile.html)
+   ========================================= */
+.account-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin: 0;
+}
+
+.account-facts div {
+    padding: 14px 16px;
+    border: 1px solid #e1e8ed;
+    border-radius: 12px;
+    background-color: #f8fafc;
+}
+
+.account-facts dt {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #5e6c84;
+}
+
+.account-facts dd {
+    margin: 4px 0 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #172b4d;
+}
+
+.profile-field .field-error {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #b42318;
+}
+
+.profile-field .field-error:empty {
+    display: none;
+}
+
+.profile-field input.input-error {
+    border-color: #d92d20;
+    background-color: #fff5f4;
+}
+

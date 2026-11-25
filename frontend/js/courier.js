@@ -13,7 +13,7 @@
 // Logged-in courier (falls back to the demo courier)
 let currentUser = null;
 try { currentUser = JSON.parse(localStorage.getItem('currentUser')); } catch (e) { currentUser = null; }
-const ME = (currentUser && currentUser.role === 'courier') ? currentUser.name : 'Miguel Santos';
+const ME = (currentUser && currentUser.role === 'courier') ? currentUser.name : 'Constantino Courier';
 document.getElementById('courier-name').textContent = ME;
 
 const message = document.getElementById('courier-msg');

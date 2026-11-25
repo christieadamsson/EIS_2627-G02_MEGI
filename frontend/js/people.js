@@ -1,7 +1,7 @@
 // =========================================
 // People manager – one component for both management pages:
 //   4_admin.html: the admin manages STAFF (only the admin approves new staff)
-//   5_staff.html: staff manage COURIERS and can PROPOSE new staff for the admin
+//   5_staff.html: staff manage COURIERS, edit CLIENTS and can PROPOSE new staff for the admin
 // Needs data.js (pdpGetUsers, pdpSetUserStatus, pdpRemoveUser, ...).
 //
 // Usage:
@@ -14,13 +14,15 @@
 //                                         //   someone else approves it); pending rows get no approve/reject
 //       managerLabel: 'Admin' | 'Staff',  // optional: name used when nobody is logged in
 //       formRole: 'admin' | 'staff',      // optional: only this logged-in role may submit the add form
+//       memberActions: ['edit', 'disable', 'remove'],  // optional: buttons per account (default: all three)
 //       details: function (user) {...},   // optional: extra text per row (e.g. vehicles, orders)
 //       onChange: function () {...}       // optional: called after every change
 //   });
 // =========================================
 function pdpPeopleManager(options) {
     const role = options.role;
-    const roleName = role === 'staff' ? 'staff member' : 'courier';
+    const roleName = { staff: 'staff member', courier: 'courier', client: 'client' }[role] || role;
+    const memberActions = options.memberActions || ['edit', 'disable', 'remove'];
     const pendingList = document.getElementById(options.pendingListId);
     const list = document.getElementById(options.listId);
     const addForm = options.addFormId ? document.getElementById(options.addFormId) : null;
@@ -72,7 +74,7 @@ function pdpPeopleManager(options) {
         return first + (second ? '</div><div class="user-role">' + second : '');
     }
 
-    // "Proposed by Sofia Martins on …" or "Registered online on …"
+    // "Proposed by Sofia Staff on …" or "Registered online on …"
     function originLine(u) {
         const when = pdpFormatDateTime(u.created_at);
         const text = u.proposedBy ? 'Proposed by ' + u.proposedBy : 'Registered online';
@@ -112,22 +114,21 @@ function pdpPeopleManager(options) {
                 </div>
                 <div class="user-actions">
                     <span class="badge ${active ? 'badge-active' : 'badge-disabled'}">${active ? 'ACTIVE' : 'DISABLED'}</span>
-                    <button type="button" class="btn-edit" data-people-action="edit" data-user="${escapeHtml(u.username)}">Edit</button>
-                    <button type="button" class="btn-edit" data-people-action="${active ? 'disable' : 'enable'}" data-user="${escapeHtml(u.username)}">${active ? 'Disable' : 'Enable'}</button>
-                    <button type="button" class="btn-remove" data-people-action="remove" data-user="${escapeHtml(u.username)}">Remove</button>
+                    ${memberActions.indexOf('edit') !== -1 ? `<button type="button" class="btn-edit" data-people-action="edit" data-user="${escapeHtml(u.username)}">Edit</button>` : ''}
+                    ${memberActions.indexOf('disable') !== -1 ? `<button type="button" class="btn-edit" data-people-action="${active ? 'disable' : 'enable'}" data-user="${escapeHtml(u.username)}">${active ? 'Disable' : 'Enable'}</button>` : ''}
+                    ${memberActions.indexOf('remove') !== -1 ? `<button type="button" class="btn-remove" data-people-action="remove" data-user="${escapeHtml(u.username)}">Remove</button>` : ''}
                 </div>
             </li>`;
     }
 
-    // Couriers are linked to orders and vehicles by name, so only contact details can change
+    // A new name is also copied to the person's orders / vehicles (pdpRenameEverywhere in data.js)
     function editRow(u) {
-        const nameLocked = role === 'courier';
         return `
             <li class="user-item user-editing">
                 <form class="profile-form user-edit-form" data-user="${escapeHtml(u.username)}" novalidate>
                     <div class="profile-field">
                         <label>Full name</label>
-                        <input type="text" name="name" value="${escapeHtml(u.name)}" ${nameLocked ? 'disabled title="Linked to orders and vehicles"' : 'required'}>
+                        <input type="text" name="name" value="${escapeHtml(u.name)}" required>
                     </div>
                     <div class="profile-field">
                         <label>Email</label>
@@ -235,7 +236,7 @@ function pdpPeopleManager(options) {
         const msg = form.querySelector('.profile-msg');
         const username = form.dataset.user;
         const user = pdpFindUser(username);
-        const name = role === 'courier' ? user.name : form.elements.name.value.trim();
+        const name = form.elements.name.value.trim();
         const email = form.elements.email.value.trim();
         const phone = form.elements.phone.value.replace(/\s/g, '');
         const nif = form.elements.nif.value.trim();
@@ -246,6 +247,10 @@ function pdpPeopleManager(options) {
             msg.textContent = text;
         }
         if (name.length < 3) return fail('Please enter the full name.');
+        // Orders and vehicles find people by name, so two accounts of the same role need different names
+        if (pdpGetUsers().some(function (u) { return u.username !== username && u.role === role && u.name.toLowerCase() === name.toLowerCase(); })) {
+            return fail('Another ' + roleName + ' already has this name.');
+        }
         if (!EMAIL.test(email)) return fail('Please enter a valid email.');
         if (emailTaken(email, username)) return fail('Another account already uses this email.');
         if (phone && !PHONE.test(phone)) return fail('Phone: 9 digits (optionally +351).');
@@ -253,6 +258,7 @@ function pdpPeopleManager(options) {
         if (citizenCard && !pdpIsValidCitizenCard(citizenCard)) return fail('Citizen card: use the format 12345678 9 ZZ4.');
         if (citizenCard && pdpCitizenCardTaken(citizenCard, username)) return fail('Another account already uses this citizen card number.');
 
+        pdpRenameEverywhere(user.name, name, role);   // keeps their orders / vehicles linked
         pdpUpdateUser(username, { name: name, email: email, phone: phone, nif: nif, citizenCard: citizenCard });
         editing = null;
         changed();

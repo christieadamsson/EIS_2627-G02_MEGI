@@ -21,6 +21,7 @@ the HTML pages, CSS and JavaScript the user sees in the browser, including the L
 | `5_staff.html` | staff | **Manage couriers** (approve/reject, edit, disable/enable, remove), approve vehicles, document alerts |
 | `6_team.html` | public | Team members |
 | `7_customerservice.html` | public | Customer service / contact page |
+| `8_profile.html` | any logged-in user | **My account**: see and edit your own details (name, username, email, phone, NIF, citizen card) and change your password |
 
 After login each role is sent to its own page (see `rolePages` in `login.js`).
 
@@ -36,6 +37,7 @@ After login each role is sent to its own page (see `rolePages` in `login.js`).
 | `courier.js` | `3_courier.html` | Available orders, route pooling, map, e-POD (signature/photo) |
 | `admin.js` | `4_admin.html` | Admin KPIs, deliveries chart, sets up staff management |
 | `staff.js` | `5_staff.html` | Vehicle approvals, document alerts, sets up courier management |
+| `profile.js` | `8_profile.html` | Own account page; a new name is also updated on your orders/vehicles |
 
 **Styles:** `style.css` is used by every page; `admin.css` adds the admin dashboard layout.
 
@@ -75,7 +77,8 @@ and courier `pedro.novo@pdp.pt` (approve on the staff page).
 | Manager | Manages | Actions |
 |---|---|---|
 | Admin (`4_admin.html`) | Staff | Approve/reject registrations and staff proposals, add staff directly, edit, disable/enable, remove |
-| Staff (`5_staff.html`) | Couriers | Approve/reject registrations, edit contact details, disable/enable, remove |
+| Staff (`5_staff.html`) | Couriers | Approve/reject registrations, edit details (incl. name), disable/enable, remove |
+| Staff (`5_staff.html`) | Clients | Edit personal details (incl. name) |
 | Staff (`5_staff.html`) | Staff | **Propose** new staff only – the admin approves or rejects them |
 
 **Page access:** `2_client.html`, `3_courier.html`, `5_staff.html` and `4_admin.html` only work for a logged-in,

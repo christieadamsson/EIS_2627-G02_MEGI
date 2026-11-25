@@ -78,7 +78,7 @@ const PDP_DEFAULT_ORDERS = [
         address: 'Rua de Santa Catarina 120, Porto',
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1489, destLng: -8.6062,
         product: { description: 'Shoe box', category: 'Clothing', weightKg: 2.5, volumeM3: 0.012 },
-        status: 'In Progress', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
+        status: 'In Progress', attempt: 1, courier: 'Constantino Courier', vehicle: 'AA-12-BC',
         createdAt: pdpDateTimeFromNow(-1, -3), acceptedAt: pdpDateTimeFromNow(-1, -2), pickedUpAt: pdpDateTimeFromNow(0, -1),
         completedAt: null, cancelledAt: null, pod: null
     },
@@ -96,7 +96,7 @@ const PDP_DEFAULT_ORDERS = [
         address: 'Rua das Flores 33, Porto',
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1430, destLng: -8.6140,
         product: { description: 'Ceramic vase', category: 'Fragile', weightKg: 4, volumeM3: 0.02 },
-        status: 'In Progress', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
+        status: 'In Progress', attempt: 1, courier: 'Constantino Courier', vehicle: 'AA-12-BC',
         createdAt: pdpDateTimeFromNow(-1, -1), acceptedAt: pdpDateTimeFromNow(-1, 0), pickedUpAt: pdpDateTimeFromNow(0, -1),
         completedAt: null, cancelledAt: null, pod: null
     },
@@ -114,7 +114,7 @@ const PDP_DEFAULT_ORDERS = [
         address: 'Avenida dos Aliados 45, Porto',
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1475, destLng: -8.6110,
         product: { description: 'Books', category: 'Other', weightKg: 5, volumeM3: 0.02 },
-        status: 'Completed', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
+        status: 'Completed', attempt: 1, courier: 'Constantino Courier', vehicle: 'AA-12-BC',
         createdAt: pdpDateTimeFromNow(-3, -2), acceptedAt: pdpDateTimeFromNow(-3, -1), pickedUpAt: pdpDateTimeFromNow(-2, -3),
         completedAt: pdpDateTimeFromNow(-2, -2), cancelledAt: null, pod: { type: 'Signature' }
     },
@@ -123,7 +123,7 @@ const PDP_DEFAULT_ORDERS = [
         address: 'Praça da Ribeira 2, Porto',
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1407, destLng: -8.6131,
         product: { description: 'Headphones', category: 'Electronics', weightKg: 1, volumeM3: 0.005 },
-        status: 'Completed', attempt: 1, courier: 'Miguel Santos', vehicle: '45-XY-90',
+        status: 'Completed', attempt: 1, courier: 'Constantino Courier', vehicle: '45-XY-90',
         createdAt: pdpDateTimeFromNow(-4, -5), acceptedAt: pdpDateTimeFromNow(-4, -4), pickedUpAt: pdpDateTimeFromNow(-3, -3),
         completedAt: pdpDateTimeFromNow(-3, -2), cancelledAt: null, pod: { type: 'Photo' }
     }
@@ -132,11 +132,11 @@ const PDP_DEFAULT_ORDERS = [
 // Vehicles registered by couriers (3_courier.html) and audited by staff (5_staff.html).
 // Only vehicles of real courier accounts – here the demo courier from login.js.
 const PDP_DEFAULT_VEHICLES = [
-    { plate: 'AA-12-BC', model: 'Renault Kangoo', type: 'Van', courier: 'Miguel Santos', maxWeightKg: 650, maxVolM3: 3.3,
+    { plate: 'AA-12-BC', model: 'Renault Kangoo', type: 'Van', courier: 'Constantino Courier', maxWeightKg: 650, maxVolM3: 3.3,
       insuranceExpiry: pdpDaysFromToday(200), inspectionExpiry: pdpDaysFromToday(120), status: 'Approved', newDocument: false },
-    { plate: '45-XY-90', model: 'Honda PCX 125', type: 'Moto', courier: 'Miguel Santos', maxWeightKg: 25, maxVolM3: 0.1,
+    { plate: '45-XY-90', model: 'Honda PCX 125', type: 'Moto', courier: 'Constantino Courier', maxWeightKg: 25, maxVolM3: 0.1,
       insuranceExpiry: pdpDaysFromToday(12), inspectionExpiry: pdpDaysFromToday(90), status: 'Approved', newDocument: false },
-    { plate: 'BK-0007', model: 'Cargo bike', type: 'Bike', courier: 'Miguel Santos', maxWeightKg: 40, maxVolM3: 0.2,
+    { plate: 'BK-0007', model: 'Cargo bike', type: 'Bike', courier: 'Constantino Courier', maxWeightKg: 40, maxVolM3: 0.2,
       insuranceExpiry: pdpDaysFromToday(300), inspectionExpiry: pdpDaysFromToday(300), status: 'Pending', newDocument: true }
 ];
 
@@ -211,7 +211,7 @@ function pdpDaysUntil(dateString) {
 // Removes all saved prototype data so every page starts from the sample data again
 function pdpResetData() {
     ['pdpOrders', 'pdpVehicles', 'pdpPendingCouriers', 'pdpCourierVehicle', 'adminUsers',
-     'pendingStaff', 'registeredUsers', 'pdpUsersSeeded', 'currentUser', 'adminProfile'].forEach(function (key) {
+     'pendingStaff', 'registeredUsers', 'pdpUsersSeeded', 'pdpDemoNames', 'currentUser', 'adminProfile'].forEach(function (key) {
         localStorage.removeItem(key);
     });
 }
@@ -258,9 +258,7 @@ function pdpHasAccess(roles) {
     const me = pdpCurrentUser();
     if (!me || roles.indexOf(me.role) === -1) return false;
     // The account must still exist and be active (e.g. not disabled after logging in)
-    const account = pdpGetUsers().find(function (u) {
-        return me.username ? u.username === me.username : (u.name === me.name && u.role === me.role);
-    });
+    const account = pdpCurrentAccount();
     return !!account && account.status === PDP_USER_STATUS.ACTIVE;
 }
 
@@ -269,7 +267,13 @@ function pdpGuardPage() {
     const required = body && body.dataset.requireRole;
     if (!required) return true;
     const roles = required.split(/\s+/);
-    if (pdpHasAccess(roles)) return true;
+    if (pdpHasAccess(roles)) {
+        // Staff may have renamed this account: page scripts read the name from the session
+        const me = pdpCurrentUser();
+        const account = pdpCurrentAccount();
+        if (account && me.name !== account.name) pdpSave('currentUser', Object.assign(me, { name: account.name }));
+        return true;
+    }
 
     const me = pdpCurrentUser();
     const needed = roles.map(function (r) { return PDP_ROLE_LABELS[r] || r; }).join(' or ');
@@ -306,7 +310,8 @@ function pdpGuardPage() {
     return false;
 }
 
-// "Login" button in the header becomes "Log out" while someone is logged in
+// While someone is logged in, the header "Login" button becomes "Log out"
+// and a "My account" link (8_profile.html) appears next to it
 function pdpSetupLoginButton() {
     const me = pdpCurrentUser();
     document.querySelectorAll('.btn-login').forEach(function (button) {
@@ -316,6 +321,17 @@ function pdpSetupLoginButton() {
         button.title = 'Logged in as ' + me.name + ' (' + (PDP_ROLE_LABELS[me.role] || me.role) + ')';
         button.href = '1_login.html';
         button.addEventListener('click', pdpLogout);
+
+        const account = document.createElement('a');
+        account.href = '8_profile.html';
+        account.className = 'btn-account';
+        account.textContent = upper ? 'MY ACCOUNT' : 'My account';
+        account.title = me.name;
+        if (location.pathname.split('/').pop() === '8_profile.html') account.classList.add('active');
+        const group = document.createElement('div');
+        group.className = 'header-account';
+        button.before(group);
+        group.append(account, button);
     });
 }
 
@@ -335,9 +351,9 @@ const PDP_USER_STATUS = { PENDING: 'pending', ACTIVE: 'active', DISABLED: 'disab
 // Accounts that exist from the start (also listed on 1_login.html)
 const PDP_DEMO_USERS = [
     { name: 'Carla Cliente',   username: 'client',  email: 'client@pdp.pt',  phone: '912000001', nif: '500000001', citizenCard: '100000011ZZ1', password: 'client123',  role: 'client',  status: 'active' },
-    { name: 'Miguel Santos',   username: 'courier', email: 'courier@pdp.pt', phone: '912000002', nif: '500000002', citizenCard: '100000022ZZ2', password: 'courier123', role: 'courier', status: 'active', approvedBy: 'Sofia Martins' },
-    { name: 'Sofia Martins',   username: 'staff',   email: 'staff@pdp.pt',   phone: '912000003', nif: '500000003', citizenCard: '100000033ZZ3', password: 'staff123',   role: 'staff',   status: 'active', approvedBy: 'Admin PDP' },
-    { name: 'Admin PDP',       username: 'admin',   email: 'admin@pdp.pt',   phone: '912000004', nif: '500000004', citizenCard: '100000044ZZ4', password: 'admin123',   role: 'admin',   status: 'active' },
+    { name: 'Constantino Courier', username: 'courier', email: 'courier@pdp.pt', phone: '912000002', nif: '500000002', citizenCard: '100000022ZZ2', password: 'courier123', role: 'courier', status: 'active', approvedBy: 'Sofia Staff' },
+    { name: 'Sofia Staff',     username: 'staff',   email: 'staff@pdp.pt',   phone: '912000003', nif: '500000003', citizenCard: '100000033ZZ3', password: 'staff123',   role: 'staff',   status: 'active', approvedBy: 'António Admin' },
+    { name: 'António Admin',   username: 'admin',   email: 'admin@pdp.pt',   phone: '912000004', nif: '500000004', citizenCard: '100000044ZZ4', password: 'admin123',   role: 'admin',   status: 'active' },
     // waiting for approval, so the admin and staff pages have something to manage
     { name: 'Johan Lindström', username: 'johan',   email: 'johan@pdp.pt',   phone: '912000005', nif: '500000005', citizenCard: '100000055ZZ5', password: 'johan1234',  role: 'staff',   status: 'pending' },
     { name: 'Elin Berg',       username: 'elin',    email: 'elin@pdp.pt',    phone: '912000006', nif: '500000006', citizenCard: '100000066ZZ6', password: 'elin12345',  role: 'staff',   status: 'pending' },
@@ -375,8 +391,32 @@ function pdpSeedUsers() {
     } catch (e) { /* storage blocked: pdpGetUsers falls back to the demo accounts */ }
 }
 
+// Demo accounts have fixed names. Browsers that saved other names for them (older versions,
+// or a rename on the "My account" page while testing) get the demo names back once.
+// Matched by USERNAME; orders, vehicles and "approved by" follow via pdpRenameEverywhere.
+const PDP_DEMO_NAMES_VERSION = '3';
+
+function pdpMigrateDemoNames() {
+    try {
+        if (localStorage.getItem('pdpDemoNames') === PDP_DEMO_NAMES_VERSION) return;
+        localStorage.setItem('pdpDemoNames', PDP_DEMO_NAMES_VERSION);   // set first: the renames below read the users again
+        const saved = JSON.parse(localStorage.getItem('registeredUsers')) || [];
+        ['client', 'courier', 'staff', 'admin'].forEach(function (username) {
+            const demo = PDP_DEMO_USERS.find(function (d) { return d.username === username; });
+            const user = saved.find(function (u) { return u.username === username && u.role === demo.role; });
+            if (!user || user.name === demo.name) return;
+            const oldName = user.name;
+            pdpRenameEverywhere(oldName, demo.name, demo.role);
+            pdpUpdateUser(username, { name: demo.name });
+            const me = pdpCurrentUser();
+            if (me && me.username === username) pdpSave('currentUser', Object.assign(me, { name: demo.name }));
+        });
+    } catch (e) { /* storage blocked: nothing saved, nothing to rename */ }
+}
+
 function pdpGetUsers() {
     pdpSeedUsers();
+    pdpMigrateDemoNames();
     try {
         const saved = JSON.parse(localStorage.getItem('registeredUsers'));
         if (saved) {
@@ -468,6 +508,111 @@ function pdpRemoveUser(username) {
 function pdpCourierStatus(name) {
     const user = pdpGetUsers().find(function (u) { return u.role === 'courier' && u.name === name; });
     return user ? user.status : 'unknown';
+}
+
+// ---------- editing your own account (8_profile.html) ----------
+
+// Checks personal details. Returns { field: 'message' } – empty object = all valid.
+// exceptUsername: the account being edited (its own email/username/card do not count as "taken").
+function pdpValidateAccount(data, exceptUsername) {
+    const errors = {};
+    const others = pdpGetUsers().filter(function (u) { return u.username !== exceptUsername; });
+    const phone = String(data.phone || '').replace(/\s/g, '');
+
+    if (String(data.name || '').trim().length < 3) errors.name = 'Please enter your full name.';
+
+    if (!/^[A-Za-z0-9._]{3,20}$/.test(data.username || '')) {
+        errors.username = '3–20 characters: letters, numbers, dot or underscore.';
+    } else if (others.some(function (u) { return u.username.toLowerCase() === data.username.toLowerCase(); })) {
+        errors.username = 'This username is already taken.';
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email || '')) {
+        errors.email = 'Please enter a valid email address.';
+    } else if (others.some(function (u) { return u.email.toLowerCase() === data.email.toLowerCase(); })) {
+        errors.email = 'Another account already uses this email.';
+    }
+
+    if (!/^(\+351)?\d{9}$/.test(phone)) errors.phone = 'Enter 9 digits (optionally starting with +351).';
+    if (!/^\d{9}$/.test(data.nif || '')) errors.nif = 'The NIF must have exactly 9 digits.';
+
+    if (!pdpIsValidCitizenCard(data.citizenCard)) {
+        errors.citizenCard = 'Use the format on your card, e.g. 12345678 9 ZZ4.';
+    } else if (pdpCitizenCardTaken(data.citizenCard, exceptUsername)) {
+        errors.citizenCard = 'Another account already uses this citizen card number.';
+    }
+    return errors;
+}
+
+// Orders, vehicles and approvals point to people by NAME, so a new name is copied everywhere
+function pdpRenameEverywhere(oldName, newName, role) {
+    if (!oldName || oldName === newName) return;
+    const orders = pdpGetOrders();
+    orders.forEach(function (o) {
+        if (role === 'client' && o.client === oldName) o.client = newName;
+        if (role === 'courier' && o.courier === oldName) o.courier = newName;
+    });
+    pdpSaveOrders(orders);
+
+    if (role === 'courier') {
+        const vehicles = pdpGetVehicles();
+        vehicles.forEach(function (v) { if (v.courier === oldName) v.courier = newName; });
+        pdpSaveVehicles(vehicles);
+    }
+
+    // "Approved by" / "Proposed by" on other accounts
+    const users = pdpGetUsers();
+    users.forEach(function (u) {
+        if (u.approvedBy === oldName) u.approvedBy = newName;
+        if (u.proposedBy === oldName) u.proposedBy = newName;
+    });
+    pdpSaveUsers(users);
+}
+
+// The full account of whoever is logged in (or null)
+function pdpCurrentAccount() {
+    const me = pdpCurrentUser();
+    if (!me) return null;
+    return pdpGetUsers().find(function (u) {
+        return me.username ? u.username === me.username : (u.name === me.name && u.role === me.role);
+    }) || null;
+}
+
+// Saves the logged-in user's own details. Returns { errors } or { user }.
+function pdpUpdateOwnAccount(changes) {
+    const account = pdpCurrentAccount();
+    if (!account) return { errors: { form: 'You are not logged in.' } };
+
+    const data = {
+        name: String(changes.name || '').trim(),
+        username: String(changes.username || '').trim(),
+        email: String(changes.email || '').trim(),
+        phone: String(changes.phone || '').replace(/\s/g, ''),
+        nif: String(changes.nif || '').trim(),
+        citizenCard: pdpNormalizeCitizenCard(changes.citizenCard)
+    };
+    const errors = pdpValidateAccount(data, account.username);
+    if (Object.keys(errors).length) return { errors: errors };
+
+    pdpRenameEverywhere(account.name, data.name, account.role);
+    const user = pdpUpdateUser(account.username, data);   // username may change here too
+
+    // Keep the login session in step with the new name / username
+    pdpSave('currentUser', { name: user.name, username: user.username, role: user.role });
+    return { user: user };
+}
+
+// Changes the logged-in user's password. Returns '' on success or an error message.
+// Prototype only: passwords are stored in plain text; Sprint 2 uses password_hash() in PHP.
+function pdpChangeOwnPassword(current, next, confirmNext) {
+    const account = pdpCurrentAccount();
+    if (!account) return 'You are not logged in.';
+    if (account.password !== current) return 'Your current password is not correct.';
+    if (next.length < 8 || !/[A-Za-z]/.test(next) || !/\d/.test(next)) return 'New password: at least 8 characters, with letters and numbers.';
+    if (next !== confirmNext) return 'The new passwords do not match.';
+    if (next === current) return 'The new password must be different from the current one.';
+    pdpUpdateUser(account.username, { password: next });
+    return '';
 }
 
 // Vehicles of real courier accounts only

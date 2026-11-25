@@ -100,6 +100,15 @@
             'A courier can take them after you approve their account and they register a vehicle there for approval below.';
     }
 
+    // Extra line under each client in the "Clients" list
+    function clientDetails(user) {
+        const orders = pdpGetOrders().filter(function (o) { return o.client === user.name; });
+        const open = orders.filter(function (o) {
+            return o.status === PDP_STATUS.INITIATED || o.status === PDP_STATUS.IN_PROGRESS;
+        }).length;
+        return orders.length + ' order(s) · ' + open + ' open';
+    }
+
     // Extra line under each courier in the "Couriers" list
     function courierDetails(user) {
         const vehicles = pdpGetVehicles().filter(function (v) { return v.courier === user.name; });
@@ -248,6 +257,15 @@
             countId: 'courier-count',
             details: courierDetails,
             onChange: renderStaffPanel   // approving / disabling a courier changes the vehicle table too
+        });
+
+        // Staff can edit clients' personal details (clients need no approval, so only "Edit")
+        pdpPeopleManager({
+            role: 'client',
+            listId: 'client-list',
+            countId: 'client-count',
+            memberActions: ['edit'],
+            details: clientDetails
         });
 
         // Staff may propose new staff members; only the admin approves them (4_admin.html)

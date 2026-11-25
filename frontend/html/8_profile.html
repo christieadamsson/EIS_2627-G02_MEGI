@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDP - My account</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<!-- Every logged-in, active account can open its own details here -->
+<body data-require-role="client courier staff admin">
+    <header class="navbar">
+        <a href="0_homepage.html" class="brand">
+            <img src="../pictures%20and%20er/pigeon_logo.png" alt="PDP" class="brand-logo">
+            <div class="brand-text">
+                <h1>PDP</h1>
+                <p>Pigeon Delivery Parcel</p>
+            </div>
+        </a>
+        <nav class="nav-links">
+            <a href="0_homepage.html">Home</a>
+            <a href="2_client.html">Client</a>
+            <a href="3_courier.html">Courier</a>
+            <a href="5_staff.html">Staff</a>
+            <a href="4_admin.html">Admin</a>
+            <a href="6_team.html">Team</a>
+            <a href="7_customerservice.html">Customer service</a>
+        </nav>
+
+        <a href="1_login.html" class="btn-login">Login</a>
+    </header>
+
+    <section class="team-banner">
+        <div class="banner-content">
+            <p class="team-label">MY ACCOUNT</p>
+            <h2 class="team-heading" id="profile-heading">Personal details</h2>
+        </div>
+    </section>
+
+    <main class="dashboard">
+
+        <!-- Read-only facts about the account (profile.js) -->
+        <section class="card">
+            <h2>Account</h2>
+            <dl class="account-facts" id="account-facts"></dl>
+        </section>
+
+        <!-- Editable personal information -->
+        <section class="card">
+            <h2>Personal Information</h2>
+            <form id="profile-form" class="profile-form" novalidate>
+                <div class="profile-field">
+                    <label for="profile-name">Full name</label>
+                    <input type="text" id="profile-name" name="name" autocomplete="name" required>
+                    <span class="field-error" id="profile-name-error"></span>
+                </div>
+                <div class="profile-field">
+                    <label for="profile-username">Username</label>
+                    <input type="text" id="profile-username" name="username" autocomplete="username" required>
+                    <span class="field-error" id="profile-username-error"></span>
+                </div>
+                <div class="profile-field">
+                    <label for="profile-email">Email</label>
+                    <input type="email" id="profile-email" name="email" autocomplete="email" required>
+                    <span class="field-error" id="profile-email-error"></span>
+                </div>
+                <div class="profile-field">
+                    <label for="profile-phone">Phone</label>
+                    <input type="tel" id="profile-phone" name="phone" autocomplete="tel" placeholder="912 345 678" required>
+                    <span class="field-error" id="profile-phone-error"></span>
+                </div>
+                <div class="profile-field">
+                    <label for="profile-nif">NIF</label>
+                    <input type="text" id="profile-nif" name="nif" inputmode="numeric" placeholder="9 digits" required>
+                    <span class="field-error" id="profile-nif-error"></span>
+                </div>
+                <div class="profile-field">
+                    <label for="profile-citizen-card">Citizen card number</label>
+                    <input type="text" id="profile-citizen-card" name="citizenCard" placeholder="e.g. 12345678 9 ZZ4" maxlength="16" required>
+                    <span class="field-error" id="profile-citizenCard-error"></span>
+                </div>
+                <div class="profile-actions">
+                    <button type="submit" class="btn-save">Save changes</button>
+                    <button type="button" class="btn-edit" id="profile-reset">Undo changes</button>
+                    <span class="profile-msg" id="profile-msg" role="status"></span>
+                </div>
+            </form>
+        </section>
+
+        <!-- Change password -->
+        <section class="card">
+            <h2>Change Password</h2>
+            <form id="password-form" class="profile-form" novalidate>
+                <div class="profile-field">
+                    <label for="password-current">Current password</label>
+                    <input type="password" id="password-current" name="current" autocomplete="current-password" required>
+                </div>
+                <div class="profile-field"></div>
+                <div class="profile-field">
+                    <label for="password-new">New password</label>
+                    <input type="password" id="password-new" name="next" autocomplete="new-password" placeholder="min. 8, letters + numbers" required>
+                </div>
+                <div class="profile-field">
+                    <label for="password-confirm">Repeat new password</label>
+                    <input type="password" id="password-confirm" name="confirm" autocomplete="new-password" required>
+                </div>
+                <div class="profile-actions">
+                    <button type="submit" class="btn-save">Change password</button>
+                    <span class="profile-msg" id="password-msg" role="status"></span>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>PDP - Pigeon Delivery Parcel | M.EGI017 Enterprise Information Systems - Group 2</p>
+    </footer>
+
+    <script src="../js/data.js"></script>
+    <script src="../js/profile.js"></script>
+</body>
+</html>
