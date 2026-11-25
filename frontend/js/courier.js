@@ -157,13 +157,39 @@ function orderRowDates(order) {
     return escapeHtml(parts.join(' · '));
 }
 
+// Everything the courier needs to know about the parcel before taking it
+function productDetails(product) {
+    const p = product || {};
+    const weight = Number(p.weightKg);
+    const volume = Number(p.volumeM3);
+    const volumetric = Number.isFinite(volume) ? volume * 200 : NaN;   // spec: volume (m³) × 200
+    const fragile = String(p.category || '').toLowerCase() === 'fragile';
+
+    const chips = [
+        { label: 'Category', value: p.category || '—', fragile: fragile },
+        { label: 'Weight', value: Number.isFinite(weight) ? weight + ' kg' : '—' },
+        { label: 'Volume', value: Number.isFinite(volume) ? volume + ' m³' : '—' },
+        { label: 'Volumetric', value: Number.isFinite(volumetric) ? volumetric.toFixed(2) + ' kg' : '—' }
+    ];
+    return `
+        <div class="order-row-product">
+            <strong>${escapeHtml(p.description || 'Parcel')}</strong>
+            <div class="product-chips">
+                ${chips.map(function (c) {
+                    return `<span class="product-chip${c.fragile ? ' product-chip-fragile' : ''}">${escapeHtml(c.label)}: ${escapeHtml(c.value)}</span>`;
+                }).join('')}
+            </div>
+        </div>`;
+}
+
 function orderRow(order, buttonsHtml) {
     return `
         <div class="order-row">
             <div>
                 <div class="order-row-id">${escapeHtml(order.id)}</div>
                 <div class="order-row-name">${escapeHtml(order.recipient)}</div>
-                <div class="order-row-meta">${escapeHtml(order.address)} · ${escapeHtml(order.product.weightKg)} kg${order.attempt > 1 ? ' · attempt ' + order.attempt : ''}</div>
+                <div class="order-row-meta">${escapeHtml(order.address)}${order.attempt > 1 ? ' · attempt ' + order.attempt : ''}</div>
+                ${productDetails(order.product)}
                 <div class="order-row-meta">${orderRowDates(order)}</div>
                 <span class="status-badge ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
             </div>
