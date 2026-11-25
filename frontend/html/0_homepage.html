@@ -124,10 +124,20 @@
                 return false;
             }
 
-            var order = pdpFindOrder(input);
+            // Sprint 2: only registered (logged-in) clients can track, and only their own parcels
+            var id = input.toUpperCase();
+            if (!pdpHasAccess(["client"])) {
+                var me = pdpCurrentUser();
+                showTrackingMessage("error", (me ? "Parcel tracking is only for client accounts. " : "Please log in as a client to track your parcel. ") +
+                    "<a href=\"" + pdpLoginUrl("2_client.html#" + id) + "\">Log in</a> or " +
+                    "<a href=\"1_login.html#register\">create a free account</a>.");
+                return false;
+            }
+
+            var order = pdpFindClientOrder(id, pdpCurrentUser().name);
             if (!order) {
                 field.classList.add("input-error");
-                showTrackingMessage("error", "No parcel found with number " + input.toUpperCase() + ".");
+                showTrackingMessage("error", "No parcel " + id + " found in your orders.");
                 return false;
             }
 

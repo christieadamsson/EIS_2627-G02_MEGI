@@ -153,8 +153,12 @@ loginForm.addEventListener('submit', function (e) {
     localStorage.setItem('currentUser', JSON.stringify({ name: user.name, username: user.username, role: user.role }));
 
     showMessage('success', 'Welcome, ' + user.name + '! Opening the ' + roleNames[user.role] + ' page…');
+    // Came from a link like 1_login.html?next=2_client.html#RR-1042 -> go back there,
+    // but only if it is this role's own page
+    const next = pdpSafeNext(new URLSearchParams(location.search).get('next'));
+    const target = next && next.split('#')[0] === rolePages[user.role] ? next : rolePages[user.role];
     setTimeout(function () {
-        window.location.href = rolePages[user.role];
+        window.location.href = target;
     }, 1200);
 });
 

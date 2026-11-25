@@ -5,10 +5,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Logged-in client (falls back to the demo client)
-    let currentUser = null;
-    try { currentUser = JSON.parse(localStorage.getItem('currentUser')); } catch (e) { currentUser = null; }
-    const CLIENT = (currentUser && currentUser.role === 'client') ? currentUser.name : 'Carla Cliente';
+    // Only logged-in clients can use this page (data-require-role="client", checked in data.js)
+    if (!pdpHasAccess(['client'])) return;
+    const CLIENT = pdpCurrentUser().name;
 
     // UI Elements
     const btnTracking = document.getElementById('tab-tracking-btn');
@@ -199,10 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('tracking-result').hidden = true;
             return;
         }
-        const order = pdpFindOrder(number);
+        // A client can only track their own parcels
+        const order = pdpFindClientOrder(number, CLIENT);
         if (!order) {
             trackingInput.classList.add('input-error');
-            trackingError.textContent = 'No parcel found with number ' + number.toUpperCase() + '.';
+            trackingError.textContent = 'No parcel ' + number.toUpperCase() + ' found in your orders.';
             document.getElementById('tracking-result').hidden = true;
             return;
         }

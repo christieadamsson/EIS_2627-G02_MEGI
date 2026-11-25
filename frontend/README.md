@@ -78,9 +78,12 @@ and courier `pedro.novo@pdp.pt` (approve on the staff page).
 | Staff (`5_staff.html`) | Couriers | Approve/reject registrations, edit contact details, disable/enable, remove |
 | Staff (`5_staff.html`) | Staff | **Propose** new staff only – the admin approves or rejects them |
 
-**Page access:** `3_courier.html`, `5_staff.html` and `4_admin.html` only work for a logged-in,
+**Page access:** `2_client.html`, `3_courier.html`, `5_staff.html` and `4_admin.html` only work for a logged-in,
 active account with that role (`<body data-require-role="...">`, checked in `data.js`). Everyone else
-sees a "No access" message. The client page stays open because the homepage links to it for parcel tracking.
+sees a "No access" message with a login link that brings them back afterwards.
+
+**Parcel tracking (Sprint 2):** only registered clients can track, and only their own parcels.
+The homepage tracking box asks visitors to log in or register first.
 The header "Login" button turns into "Log out" while someone is logged in.
 
 A disabled account cannot log in. Disabling or removing a courier sends their unfinished

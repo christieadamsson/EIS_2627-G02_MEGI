@@ -171,6 +171,30 @@ function pdpFindOrder(id) {
     });
 }
 
+// Tracking is only for registered clients, and only for their OWN orders
+function pdpFindClientOrder(id, clientName) {
+    const order = pdpFindOrder(id);
+    return order && order.client === clientName ? order : null;
+}
+
+// ---------- login link that brings the user back afterwards ----------
+// "1_login.html?next=2_client.html%23RR-1042" -> after logging in, login.js opens 2_client.html#RR-1042.
+// Only a page file in the same folder is accepted (no other sites).
+function pdpSafeNext(value) {
+    const next = String(value || '');
+    return /^[0-9A-Za-z_]+\.html(#[A-Za-z0-9-]+)?$/.test(next) ? next : '';
+}
+
+function pdpLoginUrl(next) {
+    const safe = pdpSafeNext(next);
+    return '1_login.html' + (safe ? '?next=' + encodeURIComponent(safe) : '');
+}
+
+// The current page, e.g. "2_client.html#RR-1042"
+function pdpCurrentPage() {
+    return location.pathname.split('/').pop() + location.hash;
+}
+
 function pdpNextOrderId() {
     const highest = pdpGetOrders().reduce(function (max, o) {
         return Math.max(max, parseInt(o.id.split('-')[1], 10));
@@ -254,11 +278,14 @@ function pdpGuardPage() {
         : 'Please log in with a ' + needed + ' account to use this page.';
 
     const main = document.querySelector('main');
-    // Page scripts still load, but nothing can be seen or used.
-    // style.display is needed too: CSS like ".dashboard { display: flex }" overrides the hidden attribute.
+    // Hide the page content but keep the black page banner (.team-banner) – on some pages
+    // the banner is inside <main>. Page scripts still load, but nothing can be seen or used.
+    // style.display is used because CSS like ".card { display: ... }" would override the hidden attribute.
+    const banner = main ? main.querySelector(':scope > .team-banner') : null;
     if (main) {
-        main.hidden = true;
-        main.style.display = 'none';
+        Array.prototype.forEach.call(main.children, function (child) {
+            if (child !== banner) child.style.display = 'none';
+        });
     }
     const box = document.createElement('section');
     box.className = 'access-denied';
@@ -268,12 +295,14 @@ function pdpGuardPage() {
     const text = document.createElement('p');
     text.textContent = reason;
     const link = document.createElement('a');
-    link.href = '1_login.html';
+    link.href = pdpLoginUrl(pdpCurrentPage());   // come back here after logging in
     link.className = 'btn-save';
     link.textContent = me ? 'Log in with another account' : 'Go to login';
     link.addEventListener('click', pdpLogout);
     box.append(title, text, link);
-    if (main) main.before(box); else body.prepend(box);
+    if (banner) banner.after(box);        // banner inside <main>: message right below it
+    else if (main) main.prepend(box);     // banner above <main> (staff, admin): message at the top of <main>
+    else body.prepend(box);
     return false;
 }
 
