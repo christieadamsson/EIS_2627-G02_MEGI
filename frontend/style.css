@@ -1082,6 +1082,58 @@ footer {
     opacity: 0.85;
 }
 
+/* Stat cards on the client tracking result */
+.tracking-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin: 8px 0 20px;
+}
+
+.tracking-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid #d5e4eb;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.tracking-stat-wide {
+    grid-column: 1 / -1;
+}
+
+.tracking-stat-title {
+    color: #58707d;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.tracking-stat-value {
+    color: #075277;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+/* licence plate look */
+.tracking-stat-value.plate {
+    align-self: flex-start;
+    padding: 2px 12px;
+    border: 2px solid #17212b;
+    border-radius: 6px;
+    color: #17212b;
+    font-family: monospace;
+    letter-spacing: 0.08em;
+}
+
+.tracking-stat-note {
+    color: #607986;
+    font-size: 12px;
+}
+
 .tracking-details {
     max-width: 720px;
     color: #607986;
@@ -2119,3 +2171,120 @@ footer {
         font-size: 24px;
     }
 }
+
+/* =========================================
+   Managing people (people.js) – used on 4_admin.html (staff)
+   and 5_staff.html (couriers): edit forms, action buttons
+   ========================================= */
+.profile-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 20px;
+}
+
+.profile-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #172b4d;
+}
+
+.profile-field input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+.profile-field input:focus {
+    outline: none;
+    border-color: #72cff9;
+    box-shadow: 0 0 0 3px rgba(114, 207, 249, 0.3);
+}
+
+.profile-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.btn-save {
+    background-color: #72cff9;
+    color: #003853;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-save:hover { background-color: #4ec2ee; }
+.profile-msg { font-size: 14px; font-weight: 600; }
+.profile-msg-success { color: #065f46; }
+.profile-msg-error   { color: #b42318; }
+
+@media (max-width: 800px) {
+    .profile-form { grid-template-columns: 1fr; }
+}
+
+/* --- Users list: edit / remove --- */
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-edit,
+.btn-remove {
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-edit   { background-color: #eef4ff; color: #0b6bcb; border: none; }
+.btn-edit:hover { background-color: #dbe8ff; }
+.btn-remove { background-color: transparent; color: #b42318; border: 2px solid #f4a8a0; }
+.btn-remove:hover { background-color: #fdecea; }
+
+.user-editing { display: block; }
+.user-edit-form { padding: 6px 0; }
+
+.profile-field select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background-color: #ffffff;
+}
+
+.empty-users {
+    color: #7a869a;
+    font-size: 14px;
+    padding: 10px 0;
+}
+
+@media (max-width: 700px) {
+    .user-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+/* A disabled account is greyed out in the list */
+.user-disabled .user-name,
+.user-disabled .user-role {
+    opacity: 0.6;
+}
+

@@ -1,30 +1,16 @@
 // =========================================
-// Admin panel (4_admin.html) – operational KPIs + edit/remove users
+// Admin panel (4_admin.html) – operational KPIs + managing STAFF
 // Reads the same localStorage lists as the other pages:
-//   "registeredUsers" -> accounts created on 1_login.html (login.js)
+//   "registeredUsers" -> all accounts (data.js). The admin approves, edits,
+//                        disables and removes staff (shared component in people.js).
 //   "pdpOrders"       -> orders shared with client/courier pages (data.js)
 //   "pdpVehicles"     -> vehicles audited by staff (data.js, staff.js)
-//   "pendingStaff"    -> staff waiting for admin approval (scripts.js)
-//   "adminUsers"      -> users approved by the admin (scripts.js)
 // =========================================
 (function () {
     const DAY = 24 * 60 * 60 * 1000;
     const WARNING_DAYS = 30;
 
-    // --- 1. Storage helpers ---
-
-    function readJSON(key, fallback) {
-        try {
-            const value = JSON.parse(localStorage.getItem(key));
-            return value === null ? fallback : value;
-        } catch (e) {
-            return fallback;
-        }
-    }
-
-    function saveJSON(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
-    }
+    // --- 1. Helpers ---
 
     function daysUntil(dateString) {
         const today = new Date(new Date().toISOString().slice(0, 10));
@@ -35,16 +21,12 @@
 
     function calculateKpis() {
         const orders = pdpGetOrders();
-        const registered = readJSON('registeredUsers', []);
+        const users = pdpGetUsers();
         // Only vehicles of real courier accounts (same list as the staff page)
-        const courierNames = ['Miguel Santos'].concat(registered
-            .filter(function (u) { return u.role === 'courier'; })
-            .map(function (u) { return u.name; }));
-        const vehicles = pdpGetVehicles().filter(function (v) { return courierNames.indexOf(v.courier) !== -1; });
-        const pendingStaff = readJSON('pendingStaff', [
-            { name: 'Johan Lindström' }, { name: 'Elin Berg' } // same default as scripts.js
-        ]);
-        const adminUsers = readJSON('adminUsers', typeof dashboardData !== 'undefined' ? dashboardData.users : []);
+        const vehicles = pdpCourierVehicles();
+        function count(role, status) {
+            return users.filter(function (u) { return u.role === role && (!status || u.status === status); }).length;
+        }
 
         const delivered = orders.filter(function (o) { return o.status === PDP_STATUS.COMPLETED; }).length;
         const inTransit = orders.filter(function (o) { return o.status === PDP_STATUS.IN_PROGRESS; }).length;
@@ -52,21 +34,12 @@
         const unassigned = orders.filter(function (o) { return !o.courier && o.status === PDP_STATUS.INITIATED; }).length;
         const deliveryRate = orders.length ? Math.round((delivered / orders.length) * 100) : 0;
 
-        const couriers = registered.filter(function (u) { return u.role === 'courier'; });
-        const activeCouriers = 1 + couriers.filter(function (u) { return u.status === 'active'; }).length; // +1 = demo courier
-        const pendingCouriers = couriers.filter(function (u) { return u.status === 'pending'; }).length;
-        const clients = 1 + registered.filter(function (u) { return u.role === 'client'; }).length; // +1 = demo client
-        const staffNames = new Set(['Sofia Martins']); // demo staff account
-        adminUsers.forEach(function (user) {
-            const role = String(user.role || '').toUpperCase();
-            if (user.status === 'ACTIVE' && role !== 'TEAM MEMBER' && role !== 'ADMIN') {
-                staffNames.add(user.name);
-            }
-        });
-        registered.forEach(function (user) {
-            if (user.role === 'staff' && user.status === 'active') staffNames.add(user.name);
-        });
-        pendingStaff.forEach(function (user) { staffNames.add(user.name); });
+        const activeCouriers = count('courier', PDP_USER_STATUS.ACTIVE);
+        const pendingCouriers = count('courier', PDP_USER_STATUS.PENDING);
+        const activeStaff = count('staff', PDP_USER_STATUS.ACTIVE);
+        const pendingStaff = count('staff', PDP_USER_STATUS.PENDING);
+        const disabledStaff = count('staff', PDP_USER_STATUS.DISABLED);
+        const clients = count('client');
 
         let expiredDocs = 0;
         let expiringDocs = 0;
@@ -96,8 +69,8 @@
             { group: 'People', items: [
                 { title: 'Active couriers', value: activeCouriers },
                 { title: 'Couriers to approve', value: pendingCouriers, warn: pendingCouriers > 0 },
-                { title: 'Total staff', value: staffNames.size, note: 'active and pending approval' },
-                { title: 'Staff to approve', value: pendingStaff.length, warn: pendingStaff.length > 0 },
+                { title: 'Active staff', value: activeStaff, note: disabledStaff ? disabledStaff + ' disabled' : '' },
+                { title: 'Staff to approve', value: pendingStaff, warn: pendingStaff > 0 },
                 { title: 'Clients', value: clients }
             ] }
         ];
@@ -164,169 +137,20 @@
         }).join('');
     }
 
-    // Approving/rejecting staff (scripts.js) changes the KPIs, so refresh them afterwards
-    ['approveStaff', 'rejectStaff'].forEach(function (name) {
-        const original = window[name];
-        if (typeof original !== 'function') return;
-        window[name] = function (index) {
-            original(index);
-            renderKpis();
-        };
-    });
-
-    // --- 3. Users list: edit personal information / remove user ---
-
-    let editingIndex = -1; // which user is open in the edit form (-1 = none)
-
-    function escapeHtml(text) {
-        return String(text == null ? '' : text).replace(/[&<>"']/g, function (c) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-        });
-    }
-
-    // Same list scripts.js shows: saved "adminUsers" or the default team members
-    function getUsers() {
-        const defaults = typeof dashboardData !== 'undefined' ? dashboardData.users : [];
-        return readJSON('adminUsers', defaults.map(function (u) { return Object.assign({}, u); }));
-    }
-
-    function userRow(user, index) {
-        const isActive = user.status === 'ACTIVE';
-        const contact = [user.email, user.phone ? 'Phone ' + user.phone : ''].filter(Boolean).join(' · ');
-        return `
-            <li class="user-item">
-                <div>
-                    <div class="user-name">${escapeHtml(user.name)}</div>
-                    <div class="user-role">${escapeHtml(user.role)}${contact ? ' · ' + escapeHtml(contact) : ''}</div>
-                </div>
-                <div class="user-actions">
-                    <span class="badge ${isActive ? 'badge-active' : 'badge-disabled'}">${escapeHtml(user.status)}</span>
-                    <button type="button" class="btn-edit" data-user-action="edit" data-index="${index}">Edit</button>
-                    <button type="button" class="btn-remove" data-user-action="remove" data-index="${index}">Remove</button>
-                </div>
-            </li>`;
-    }
-
-    function userEditForm(user, index) {
-        return `
-            <li class="user-item user-editing">
-                <form class="profile-form user-edit-form" data-index="${index}" novalidate>
-                    <div class="profile-field">
-                        <label>Full name</label>
-                        <input type="text" name="name" value="${escapeHtml(user.name)}" required>
-                    </div>
-                    <div class="profile-field">
-                        <label>Role</label>
-                        <input type="text" name="role" value="${escapeHtml(user.role)}" required>
-                    </div>
-                    <div class="profile-field">
-                        <label>Email</label>
-                        <input type="email" name="email" value="${escapeHtml(user.email)}">
-                    </div>
-                    <div class="profile-field">
-                        <label>Phone</label>
-                        <input type="tel" name="phone" value="${escapeHtml(user.phone)}" placeholder="9 digits">
-                    </div>
-                    <div class="profile-field">
-                        <label>Status</label>
-                        <select name="status">
-                            <option value="ACTIVE" ${user.status === 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
-                            <option value="DISABLED" ${user.status !== 'ACTIVE' ? 'selected' : ''}>DISABLED</option>
-                        </select>
-                    </div>
-                    <div class="profile-actions">
-                        <button type="submit" class="btn-save">Save</button>
-                        <button type="button" class="btn-edit" data-user-action="cancel">Cancel</button>
-                        <span class="profile-msg" role="status"></span>
-                    </div>
-                </form>
-            </li>`;
-    }
-
-    function renderUserList() {
-        const container = document.getElementById('users-container');
-        if (!container) return;
-        const users = getUsers();
-
-        if (users.length === 0) {
-            container.innerHTML = '<p class="empty-users">No users.</p>';
-            return;
-        }
-        container.innerHTML = users.map(function (user, index) {
-            return index === editingIndex ? userEditForm(user, index) : userRow(user, index);
-        }).join('');
-    }
-
-    // scripts.js calls renderUsers() on load and after approving staff -> use this version on the admin page
-    window.renderUsers = renderUserList;
-
-    function saveUserEdit(form) {
-        const msg = form.querySelector('.profile-msg');
-        const index = Number(form.dataset.index);
-        const name = form.elements.name.value.trim();
-        const role = form.elements.role.value.trim();
-        const email = form.elements.email.value.trim();
-        const phone = form.elements.phone.value.trim();
-
-        function fail(text) {
-            msg.className = 'profile-msg profile-msg-error';
-            msg.textContent = text;
-        }
-        if (name.length < 3) return fail('Please enter the full name.');
-        if (role.length < 2) return fail('Please enter a role.');
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email.');
-        if (phone && !/^\d{9}$/.test(phone)) return fail('Phone must have 9 digits.');
-
-        const users = getUsers();
-        Object.assign(users[index], {
-            name: name.toUpperCase(),   // same format as the rest of the list
-            role: role.toUpperCase(),
-            email: email,
-            phone: phone,
-            status: form.elements.status.value
-        });
-        saveJSON('adminUsers', users);
-
-        editingIndex = -1;
-        renderUserList();
-    }
-
-    function removeUser(index) {
-        const users = getUsers();
-        if (!confirm(`Remove ${users[index].name} from the users?`)) return;
-        users.splice(index, 1);
-        saveJSON('adminUsers', users);
-        editingIndex = -1;
-        renderUserList();
-    }
-
-    function setupUserList() {
-        const container = document.getElementById('users-container');
-        if (!container) return;
-
-        container.addEventListener('click', function (e) {
-            const button = e.target.closest('[data-user-action]');
-            if (!button) return;
-            const action = button.dataset.userAction;
-            if (action === 'edit') editingIndex = Number(button.dataset.index);
-            if (action === 'cancel') editingIndex = -1;
-            if (action === 'remove') return removeUser(Number(button.dataset.index));
-            renderUserList();
-        });
-
-        container.addEventListener('submit', function (e) {
-            if (!e.target.classList.contains('user-edit-form')) return;
-            e.preventDefault();
-            saveUserEdit(e.target);
-        });
-    }
-
-    // --- 4. Start ---
+    // --- 3. Start ---
 
     document.addEventListener('DOMContentLoaded', function () {
         renderKpis();
-        renderDeliveryChart(); // replaces the static chart from scripts.js
-        setupUserList();
-        renderUserList();
+        renderDeliveryChart();
+        // The admin manages staff accounts; every change updates the KPIs
+        pdpPeopleManager({
+            role: 'staff',
+            pendingListId: 'pending-staff',
+            pendingCountId: 'pending-staff-count',
+            listId: 'staff-list',
+            countId: 'staff-count',
+            addFormId: 'add-staff-form',
+            onChange: renderKpis
+        });
     });
 })();

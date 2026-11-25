@@ -55,24 +55,59 @@
         </div>
       </section>
   
-      <!-- Userlist -->
+      <!-- The admin manages staff (people.js). Staff manage couriers on 5_staff.html. -->
+
+      <!-- Staff who registered on 1_login.html and wait for the admin -->
       <section class="card">
-        <h2>USERS</h2>
-        <ul class="user-list" id="users-container">
-        </ul>
+        <h2>Pending Staff Approvals <span class="count-pill" id="pending-staff-count">0</span></h2>
+        <ul class="user-list" id="pending-staff"></ul>
       </section>
-      
-      <!-- Pending staff approvals -->
-    <section class="card" style="margin-top: 25px;">
-      <h2>Pending Staff Approvals</h2>
-      <div id="staff-approvals-container">
-      </div>
-  </section>
+
+      <!-- Approved staff: edit, disable / enable, remove -->
+      <section class="card">
+        <h2>Staff Members <span class="count-pill" id="staff-count" title="active / total">0</span></h2>
+        <ul class="user-list" id="staff-list"></ul>
+      </section>
+
+      <!-- The admin can also create a staff account directly (active straight away) -->
+      <section class="card">
+        <h2>Add New Staff Member</h2>
+        <form id="add-staff-form" class="profile-form" novalidate>
+          <div class="profile-field">
+            <label for="new-staff-name">Full name</label>
+            <input type="text" id="new-staff-name" name="name" placeholder="Full name" required>
+          </div>
+          <div class="profile-field">
+            <label for="new-staff-username">Username</label>
+            <input type="text" id="new-staff-username" name="username" placeholder="e.g. jsilva" required>
+          </div>
+          <div class="profile-field">
+            <label for="new-staff-email">Email</label>
+            <input type="email" id="new-staff-email" name="email" placeholder="name@pdp.pt" required>
+          </div>
+          <div class="profile-field">
+            <label for="new-staff-phone">Phone</label>
+            <input type="tel" id="new-staff-phone" name="phone" placeholder="9 digits" required>
+          </div>
+          <div class="profile-field">
+            <label for="new-staff-nif">NIF</label>
+            <input type="text" id="new-staff-nif" name="nif" placeholder="9 digits" required>
+          </div>
+          <div class="profile-field">
+            <label for="new-staff-password">Temporary password</label>
+            <input type="password" id="new-staff-password" name="password" placeholder="min. 8, letters + numbers" required>
+          </div>
+          <div class="profile-actions">
+            <button type="submit" class="btn-save">Add staff</button>
+            <span class="profile-msg" role="status"></span>
+          </div>
+        </form>
+      </section>
     </main>
 
 
     <script src="data.js" defer></script>
-    <script src="scripts.js" defer></script>
+    <script src="people.js" defer></script>
     <script src="admin.js" defer></script>
 
 <footer>

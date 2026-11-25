@@ -46,11 +46,19 @@
           <div id="vehicle-alerts"></div>
         </section>
 
+        <!-- Staff manage couriers (people.js). The admin manages staff on 4_admin.html. -->
+
         <!-- Pending courier accounts (from the register form on 1_login.html) -->
         <section class="card">
           <h2>Pending Courier Approvals <span class="count-pill" id="pending-couriers-count">0</span></h2>
           <p class="empty-msg" id="pending-couriers-info"></p>
           <ul class="user-list" id="pending-couriers"></ul>
+        </section>
+
+        <!-- Approved couriers: edit contact details, disable / enable, remove -->
+        <section class="card">
+          <h2>Couriers <span class="count-pill" id="courier-count" title="active / total">0</span></h2>
+          <ul class="user-list" id="courier-list"></ul>
         </section>
 
         <!-- Vehicles registered by couriers -->
@@ -74,24 +82,9 @@
           </div>
         </section>
 
-        <!-- Add new staff members (goes to "Pending staff approvals" on 4_admin.html) -->
-        <section class="card" style="margin-bottom: 25px;">
-            <h2>Add New Staff Member</h2>
-            <form id="add-staff-form" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #172b4d;">Name</label>
-                    <input type="text" id="new-staff-name" placeholder="Full name" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: 'Inter', sans-serif;">
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #172b4d;">Role</label>
-                    <input type="text" id="new-staff-role" placeholder="e.g. Fleet Assistant" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: 'Inter', sans-serif;">
-                </div>
-                <button type="submit" class="badge badge-active" style="cursor: pointer; border: none; padding: 12px 24px; font-size: 14px;">Add Staff</button>
-            </form>
-        </section>
 
         <script src="data.js" defer></script>
-        <script src="scripts.js" defer></script>
+        <script src="people.js" defer></script>
         <script src="staff.js" defer></script>
 </main> 
 

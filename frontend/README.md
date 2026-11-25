@@ -17,8 +17,8 @@ the HTML pages, CSS and JavaScript the user sees in the browser, including the L
 | `1_login.html` | everyone | Login and registration (client, courier, staff) |
 | `2_client.html` | client | Place orders, see price, track orders on a map |
 | `3_courier.html` | courier | Pick orders, build a route, navigate on the map, proof of delivery, manage vehicles |
-| `4_admin.html` | admin | KPIs/dashboard, manage users, approve staff |
-| `5_staff.html` | staff | Approve couriers and vehicles, alerts for expired insurance/inspection |
+| `4_admin.html` | admin | KPIs/dashboard, **manage staff** (approve/reject, add, edit, disable/enable, remove) |
+| `5_staff.html` | staff | **Manage couriers** (approve/reject, edit, disable/enable, remove), approve vehicles, document alerts |
 | `6_team.html` | public | Team members |
 | `7_customerservice.html` | public | Customer service / contact page |
 
@@ -28,14 +28,14 @@ After login each role is sent to its own page (see `rolePages` in `login.js`).
 
 | File | Used by | Purpose |
 |---|---|---|
-| `data.js` | most pages | Shared sample data, order statuses, FEUP depot location and `pdpLoad`/`pdpSave` helpers |
+| `data.js` | all pages with data | Shared sample data, order statuses, FEUP depot, storage helpers and the **single account list** (`pdpGetUsers`, `pdpSetUserStatus`, `pdpRemoveUser`) |
+| `people.js` | `4_admin.html`, `5_staff.html` | Reusable "manage people" component: admin → staff, staff → couriers |
 | `login.js` | `1_login.html` | Login, register, redirect by role |
 | `homepage.js` | `0_homepage.html` | Public metrics |
 | `client.js` | `2_client.html` | Order form, pricing, Leaflet map + OSRM route |
 | `courier.js` | `3_courier.html` | Available orders, route pooling, map, e-POD (signature/photo) |
-| `scripts.js` | `4_admin.html`, `5_staff.html` | Shared dashboard data and staff approval logic |
-| `admin.js` | `4_admin.html` | Admin KPIs and user management |
-| `staff.js` | `5_staff.html` | Courier/vehicle approvals |
+| `admin.js` | `4_admin.html` | Admin KPIs, deliveries chart, sets up staff management |
+| `staff.js` | `5_staff.html` | Vehicle approvals, document alerts, sets up courier management |
 
 **Styles:** `style.css` is used by every page; `admin.css` adds the admin dashboard layout.
 
@@ -66,6 +66,20 @@ Demo accounts (prototype only):
 | Staff | `staff` | `staff123` |
 | Admin | `admin` | `admin123` |
 
+Log in with the **email** (`client@pdp.pt`, `courier@pdp.pt`, `staff@pdp.pt`, `admin@pdp.pt`).
+There are also accounts waiting for approval: staff `johan@pdp.pt` / `elin@pdp.pt` (approve on the admin page)
+and courier `pedro.novo@pdp.pt` (approve on the staff page).
+
+### Who manages whom
+
+| Manager | Manages | Actions |
+|---|---|---|
+| Admin (`4_admin.html`) | Staff | Approve/reject registrations, add staff directly, edit, disable/enable, remove |
+| Staff (`5_staff.html`) | Couriers | Approve/reject registrations, edit contact details, disable/enable, remove |
+
+A disabled account cannot log in. Disabling or removing a courier sends their unfinished
+orders back to "Available orders"; removing a courier also removes their vehicles.
+
 To reset the prototype data, clear the site's `localStorage` in the browser DevTools
 (Application → Local Storage).
 
@@ -85,7 +99,7 @@ All sample accounts in the database use the password `password`
 ## Sprint 2 migration plan (localStorage → REST API)
 
 Every page currently reads and writes `localStorage` (`pdpOrders`, `pdpVehicles`,
-`registeredUsers`, `currentUser`, `pendingStaff`, `adminUsers`).
+`registeredUsers`, `currentUser`).
 These are replaced by calls to the backend:
 
 1. Add a small `api.js` with one `fetch` wrapper (JSON, `credentials: 'same-origin'`, error handling).

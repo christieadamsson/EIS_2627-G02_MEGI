@@ -4,8 +4,9 @@
 //       for expired insurance / inspection.
 //
 // Needs data.js. Shares all data and rules with the courier page (3_courier.html):
-//   "registeredUsers" -> courier accounts (login.js). A courier registered on
-//                        1_login.html stays 'pending' until staff approves them.
+//   "registeredUsers" -> all accounts (data.js). Staff manage the COURIERS:
+//                        approve / reject new ones, edit, disable / enable, remove
+//                        (shared component in people.js).
 //   "pdpVehicles"     -> vehicles couriers register / renew on the courier page.
 //                        Staff sets them to 'Approved' or 'Rejected' (with a reason
 //                        the courier sees in "My vehicles").
@@ -88,38 +89,26 @@
         }).join('');
     }
 
-    function renderPendingCouriers() {
-        const container = document.getElementById('pending-couriers');
-        const pending = readList('registeredUsers').filter(function (u) {
-            return u.role === 'courier' && u.status === 'pending';
-        });
+    // Pending + approved couriers are rendered by people.js; this adds the info line above them
+    function renderCourierInfo() {
         const available = pdpGetOrders().filter(function (o) {
             return !o.courier && o.status === PDP_STATUS.INITIATED;
         }).length;
-
-        document.getElementById('pending-couriers-count').textContent = pending.length;
         document.getElementById('pending-couriers-info').textContent =
             available + ' order(s) are waiting under "Available orders" on the courier page. ' +
             'A courier can take them after you approve their account and they register a vehicle there for approval below.';
+    }
 
-        if (pending.length === 0) {
-            container.innerHTML = '<p class="empty-msg">No couriers waiting for approval.</p>';
-            return;
-        }
-
-        container.innerHTML = pending.map(function (c) {
-            return `
-                <li class="user-item">
-                    <div>
-                        <div class="user-name">${escapeHtml(c.name)}</div>
-                        <div class="user-role">${escapeHtml(c.email)} · Phone ${escapeHtml(c.phone)} · NIF ${escapeHtml(c.nif)} · Registered ${escapeHtml((c.created_at || '').slice(0, 10))}</div>
-                    </div>
-                    <div class="approval-actions">
-                        <button class="btn-approve" data-action="approve-courier" data-id="${escapeHtml(c.username)}">Approve</button>
-                        <button class="btn-reject" data-action="reject-courier" data-id="${escapeHtml(c.username)}">Reject</button>
-                    </div>
-                </li>`;
-        }).join('');
+    // Extra line under each courier in the "Couriers" list
+    function courierDetails(user) {
+        const vehicles = pdpGetVehicles().filter(function (v) { return v.courier === user.name; });
+        const approved = vehicles.filter(function (v) { return v.status === PDP_VEHICLE.APPROVED; }).length;
+        const onRoute = pdpActiveRouteOrders(user.name).length;
+        const delivered = pdpGetOrders().filter(function (o) {
+            return o.courier === user.name && o.status === PDP_STATUS.COMPLETED;
+        }).length;
+        return vehicles.length + ' vehicle(s), ' + approved + ' approved · ' +
+            (onRoute ? onRoute + ' order(s) on route now' : 'not on a route') + ' · ' + delivered + ' delivered';
     }
 
     function vehicleStatusCell(v, expired, onRoute) {
@@ -148,12 +137,15 @@
 
         tbody.innerHTML = vehicles.map(function (v) {
             const expired = pdpHasExpiredDocument(v);
-            const courierPending = pdpCourierStatus(v.courier) === 'pending';
+            const courierStatus = pdpCourierStatus(v.courier);
+            const courierPending = courierStatus === 'pending';
+            const courierDisabled = courierStatus === 'disabled';
             const onRoute = ordersOnRoute(v);
 
             let actions = '';
             if (v.status === PDP_VEHICLE.PENDING) {
-                const approveBlock = expired ? 'Documents expired' : (courierPending ? 'Approve the courier first' : '');
+                const approveBlock = expired ? 'Documents expired' : (courierPending ? 'Approve the courier first' :
+                    (courierDisabled ? 'Courier is disabled' : ''));
                 actions = `
                     <button class="btn-approve" data-action="approve-vehicle" data-id="${escapeHtml(v.plate)}"
                         ${approveBlock ? 'disabled title="' + approveBlock + '"' : ''}>Approve</button>
@@ -169,7 +161,7 @@
                     <td class="order-id">${escapeHtml(v.plate)}</td>
                     <td><strong>${escapeHtml(v.model)}</strong><br><small>${escapeHtml(v.type)} · ${escapeHtml(v.maxWeightKg)} kg · ${escapeHtml(v.maxVolM3)} m³</small>
                         ${v.certificateFile ? '<br><small>Certificate: ' + escapeHtml(v.certificateFile) + '</small>' : ''}</td>
-                    <td>${escapeHtml(v.courier)}${courierPending ? '<br><small>Courier pending</small>' : ''}</td>
+                    <td>${escapeHtml(v.courier)}${courierPending ? '<br><small>Courier pending</small>' : ''}${courierDisabled ? '<br><small>Courier disabled</small>' : ''}</td>
                     <td>${documentCell(v.insuranceExpiry)}</td>
                     <td>${documentCell(v.inspectionExpiry)}</td>
                     <td>${vehicleStatusCell(v, expired, onRoute)}</td>
@@ -180,34 +172,12 @@
 
     function renderStaffPanel() {
         renderAlerts();
-        renderPendingCouriers();
+        renderCourierInfo();
         renderVehicles();
+        if (couriers) couriers.render();
     }
 
     // --- 4. Approve / reject actions ---
-
-    function approveCourier(username) {
-        const users = readList('registeredUsers');
-        const courier = users.find(function (u) { return u.username === username; });
-        courier.status = 'active'; // login.js now lets this courier log in
-        saveList('registeredUsers', users);
-        alert(`${courier.name} is approved and can now log in as a courier. ` +
-              `They can now register a vehicle on the courier page; it will appear below for approval.`);
-    }
-
-    function rejectCourier(username) {
-        const users = readList('registeredUsers');
-        const index = users.findIndex(function (u) { return u.username === username; });
-        const courier = users[index];
-        if (!confirm(`Reject ${courier.name}? Their account and vehicles will be removed.`)) return;
-        users.splice(index, 1);
-        saveList('registeredUsers', users);
-        pdpSaveVehicles(pdpGetVehicles().filter(function (v) { return v.courier !== courier.name; }));
-
-        // Safety net: unfinished orders of this courier go back to "Available orders"
-        const released = pdpReleaseCourierOrders(courier.name);
-        if (released) alert(`${released} order(s) of ${courier.name} were returned to the available orders.`);
-    }
 
     function updateVehicle(plate, change) {
         const vehicles = pdpGetVehicles();
@@ -247,8 +217,6 @@
     }
 
     const actions = {
-        'approve-courier': approveCourier,
-        'reject-courier': rejectCourier,
         'approve-vehicle': approveVehicle,
         'reject-vehicle': rejectVehicle,
         'review-vehicle': reviewVehicle
@@ -267,8 +235,19 @@
 
     // --- 5. Start ---
 
+    let couriers = null;   // people.js manager for the courier accounts
+
     document.addEventListener('DOMContentLoaded', function () {
         removeOldSampleData();
+        couriers = pdpPeopleManager({
+            role: 'courier',
+            pendingListId: 'pending-couriers',
+            pendingCountId: 'pending-couriers-count',
+            listId: 'courier-list',
+            countId: 'courier-count',
+            details: courierDetails,
+            onChange: renderStaffPanel   // approving / disabling a courier changes the vehicle table too
+        });
         renderStaffPanel();
     });
 })();

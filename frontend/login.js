@@ -1,16 +1,10 @@
 // =========================================
 // Login & register page (1_login.html)
+// Needs data.js: all accounts are in ONE list (pdpGetUsers), the same list
+// the admin page (manages staff) and the staff page (manages couriers) change.
 // Prototype only: accounts are kept in the browser (localStorage),
 // passwords are not encrypted. A real backend replaces this in Sprint 2.
 // =========================================
-
-// Sample test accounts (also listed on the page)
-const demoUsers = [
-    { name: 'Carla Cliente',  username: 'client',  email: 'client@pdp.pt',  password: 'client123',  role: 'client',  status: 'active' },
-    { name: 'Miguel Santos',  username: 'courier', email: 'courier@pdp.pt', password: 'courier123', role: 'courier', status: 'active' },
-    { name: 'Sofia Martins',  username: 'staff',   email: 'staff@pdp.pt',   password: 'staff123',   role: 'staff',   status: 'active' },
-    { name: 'Admin PDP',      username: 'admin',   email: 'admin@pdp.pt',   password: 'admin123',   role: 'admin',   status: 'active' }
-];
 
 // Page each role is sent to after logging in
 const rolePages = {
@@ -33,44 +27,13 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // --- 1. Stored accounts ---
 
-function readStorage(key) {
-    try {
-        return JSON.parse(localStorage.getItem(key)) || [];
-    } catch (e) {
-        return [];
-    }
-}
-
 function getAllUsers() {
-    return demoUsers.concat(readStorage('registeredUsers'));
+    return pdpGetUsers();
 }
 
 function findUserByEmail(email) {
     return getAllUsers().find(function (user) {
         return user.email.toLowerCase() === email.toLowerCase();
-    });
-}
-
-// Staff registered here appear under "Pending staff approvals" on the Admin page
-// (scripts.js reads the same "pendingStaff" list). Once the admin approves them,
-// they are in "adminUsers" and may log in.
-function addToPendingStaff(name) {
-    let pendingStaff = JSON.parse(localStorage.getItem('pendingStaff'));
-    if (!pendingStaff) {
-        // same default list scripts.js shows when nothing is saved yet
-        pendingStaff = [
-            { name: 'Johan Lindström', role: 'Logistics Coordinator' },
-            { name: 'Elin Berg', role: 'Fleet Assistant' }
-        ];
-    }
-    pendingStaff.push({ name: name, role: 'Staff (registered online)' });
-    localStorage.setItem('pendingStaff', JSON.stringify(pendingStaff));
-}
-
-function isApprovedByAdmin(user) {
-    const adminUsers = readStorage('adminUsers');
-    return adminUsers.some(function (u) {
-        return u.name === user.name.toUpperCase() && u.status === 'ACTIVE';
     });
 }
 
@@ -176,14 +139,18 @@ loginForm.addEventListener('submit', function (e) {
         return;
     }
 
-    if (user.status === 'pending' && !(user.role === 'staff' && isApprovedByAdmin(user))) {
-        const approver = user.role === 'courier' ? 'a staff member' : 'an administrator';
+    const approver = user.role === 'courier' ? 'a staff member' : 'an administrator';
+    if (user.status === PDP_USER_STATUS.PENDING) {
         showMessage('error', 'Your account is waiting for approval by ' + approver + '.');
+        return;
+    }
+    if (user.status === PDP_USER_STATUS.DISABLED) {
+        showMessage('error', 'Your account has been disabled. Please contact ' + approver + '.');
         return;
     }
 
     // Remember who is logged in, so other pages can use it later
-    localStorage.setItem('currentUser', JSON.stringify({ name: user.name, role: user.role }));
+    localStorage.setItem('currentUser', JSON.stringify({ name: user.name, username: user.username, role: user.role }));
 
     showMessage('success', 'Welcome, ' + user.name + '! Opening the ' + roleNames[user.role] + ' page…');
     setTimeout(function () {
@@ -304,13 +271,10 @@ registerForm.addEventListener('submit', function (e) {
         created_at: new Date().toISOString()
     };
 
-    const registered = readStorage('registeredUsers');
-    registered.push(newUser);
-    localStorage.setItem('registeredUsers', JSON.stringify(registered));
-
-    if (role === 'staff') {
-        addToPendingStaff(name);
-    }
+    // Pending staff show up on the admin page, pending couriers on the staff page
+    const users = pdpGetUsers();
+    users.push(newUser);
+    pdpSaveUsers(users);
 
     registerForm.reset();
     showForm('login');

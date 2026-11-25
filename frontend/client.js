@@ -90,6 +90,59 @@ document.addEventListener('DOMContentLoaded', () => {
         { label: 'Delivered',           field: 'completedAt' }
     ];
 
+    // "45 min", "3 h 10 min", "2 d 4 h"
+    function formatDuration(fromIso, toIso) {
+        const minutes = Math.max(0, Math.round((new Date(toIso) - new Date(fromIso)) / 60000));
+        if (!Number.isFinite(minutes)) return '—';
+        if (minutes < 60) return minutes + ' min';
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + ' h ' + String(minutes % 60).padStart(2, '0') + ' min';
+        return Math.floor(hours / 24) + ' d ' + (hours % 24) + ' h';
+    }
+
+    // Small stat cards shown above the tracking details
+    function trackingStats(order) {
+        const distance = distanceKm({ lat: order.originLat, lng: order.originLng },
+                                    { lat: order.destLat, lng: order.destLng });
+        const weight = Number(order.product.weightKg);
+        const volumetric = Number(order.product.volumeM3) * 200;            // spec: volume (m³) × 200
+        const chargeable = Math.max(weight, Number.isFinite(volumetric) ? volumetric : 0);
+
+        let timeLabel = 'Time since order';
+        let timeValue = formatDuration(order.createdAt, pdpNow());
+        if (order.status === PDP_STATUS.COMPLETED && order.completedAt) {
+            timeLabel = 'Delivery time';
+            timeValue = formatDuration(order.createdAt, order.completedAt);
+        } else if (order.status === PDP_STATUS.IN_PROGRESS && order.pickedUpAt) {
+            timeLabel = 'On the road for';
+            timeValue = formatDuration(order.pickedUpAt, pdpNow());
+        }
+
+        // Vehicle details come from the vehicle list (plate is set when the courier starts the route)
+        const vehicle = order.vehicle ? pdpGetVehicles().find(v => v.plate === order.vehicle) : null;
+        let vehicleValue = '—';
+        let vehicleNote = order.courier ? 'Assigned when the courier starts the route' : 'Waiting for a courier';
+        if (order.vehicle) {
+            vehicleValue = order.vehicle;
+            vehicleNote = vehicle ? vehicle.type + ' · ' + vehicle.model : '';
+        }
+
+        const cards = [
+            { title: 'Vehicle (licence plate)', value: vehicleValue, note: vehicleNote, wide: true },
+            { title: 'Distance', value: distance.toFixed(1) + ' km', note: 'straight line, origin → destination' },
+            { title: 'Chargeable weight', value: chargeable.toFixed(2) + ' kg', note: 'actual ' + weight + ' kg · volumetric ' + volumetric.toFixed(2) + ' kg' },
+            { title: timeLabel, value: timeValue, note: 'placed ' + pdpFormatDateTime(order.createdAt) },
+            { title: 'Delivery attempt', value: String(order.attempt || 1), note: order.attempt > 1 ? 'earlier attempt cancelled' : 'first attempt' }
+        ];
+
+        return '<div class="tracking-stats">' + cards.map(c => `
+            <div class="tracking-stat${c.wide ? ' tracking-stat-wide' : ''}">
+                <span class="tracking-stat-title">${escapeHtml(c.title)}</span>
+                <strong class="tracking-stat-value${c.wide && order.vehicle ? ' plate' : ''}">${escapeHtml(c.value)}</strong>
+                ${c.note ? `<span class="tracking-stat-note">${escapeHtml(c.note)}</span>` : ''}
+            </div>`).join('') + '</div>';
+    }
+
     function renderTracking(order) {
         const result = document.getElementById('tracking-result');
         const heading = document.getElementById('tracking-heading');
@@ -116,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<li class="${cls}"${i === current ? ' aria-current="step"' : ''}>${step.label}${time}</li>`;
         }).join('');
 
-        let html = `<p>To ${escapeHtml(order.recipient)} · ${escapeHtml(order.address)}</p>
+        let html = trackingStats(order) + `<p>To ${escapeHtml(order.recipient)} · ${escapeHtml(order.address)}</p>
             <p>From ${order.originLat.toFixed(4)}, ${order.originLng.toFixed(4)} → To ${order.destLat.toFixed(4)}, ${order.destLng.toFixed(4)}</p>
             <p>${escapeHtml(order.product.description)} (${escapeHtml(order.product.category)}) · ${escapeHtml(order.product.weightKg)} kg</p>`;
         if (order.courier) html += `<p>Courier: ${escapeHtml(order.courier)}${order.vehicle ? ' · Vehicle ' + escapeHtml(order.vehicle) : ''}</p>`;

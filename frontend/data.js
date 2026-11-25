@@ -187,7 +187,7 @@ function pdpDaysUntil(dateString) {
 // Removes all saved prototype data so every page starts from the sample data again
 function pdpResetData() {
     ['pdpOrders', 'pdpVehicles', 'pdpPendingCouriers', 'pdpCourierVehicle', 'adminUsers',
-     'pendingStaff', 'registeredUsers', 'currentUser', 'adminProfile'].forEach(function (key) {
+     'pendingStaff', 'registeredUsers', 'pdpUsersSeeded', 'currentUser', 'adminProfile'].forEach(function (key) {
         localStorage.removeItem(key);
     });
 }
@@ -207,7 +207,6 @@ try {
 // Used by 3_courier.html, 5_staff.html and 4_admin.html, so all pages agree.
 // =========================================
 
-const PDP_DEMO_COURIER = 'Miguel Santos';   // courier account built into login.js
 const PDP_WARNING_DAYS = 30;                // documents expiring within 30 days get a warning
 
 // Vehicle status set by staff: courier sends 'Pending', staff sets 'Approved' or 'Rejected'
@@ -218,12 +217,118 @@ function pdpCurrentUser() {
     try { return JSON.parse(localStorage.getItem('currentUser')); } catch (e) { return null; }
 }
 
-// 'active', 'pending', or 'unknown' when there is no courier account with this name
+// =========================================
+// User accounts – ONE list for every page ("registeredUsers")
+//   status: 'pending'  -> registered, waiting for approval (courier: by staff, staff: by admin)
+//           'active'   -> can log in
+//           'disabled' -> blocked by their manager, cannot log in
+//   Who manages whom:  admin -> staff,  staff -> couriers
+// Prototype only: passwords are kept in plain text in the browser.
+// In Sprint 2 the PHP backend stores password_hash() values instead.
+// =========================================
+
+const PDP_USER_STATUS = { PENDING: 'pending', ACTIVE: 'active', DISABLED: 'disabled' };
+
+// Accounts that exist from the start (also listed on 1_login.html)
+const PDP_DEMO_USERS = [
+    { name: 'Carla Cliente',   username: 'client',  email: 'client@pdp.pt',  phone: '912000001', nif: '500000001', password: 'client123',  role: 'client',  status: 'active' },
+    { name: 'Miguel Santos',   username: 'courier', email: 'courier@pdp.pt', phone: '912000002', nif: '500000002', password: 'courier123', role: 'courier', status: 'active', approvedBy: 'Sofia Martins' },
+    { name: 'Sofia Martins',   username: 'staff',   email: 'staff@pdp.pt',   phone: '912000003', nif: '500000003', password: 'staff123',   role: 'staff',   status: 'active', approvedBy: 'Admin PDP' },
+    { name: 'Admin PDP',       username: 'admin',   email: 'admin@pdp.pt',   phone: '912000004', nif: '500000004', password: 'admin123',   role: 'admin',   status: 'active' },
+    // waiting for approval, so the admin and staff pages have something to manage
+    { name: 'Johan Lindström', username: 'johan',   email: 'johan@pdp.pt',   phone: '912000005', nif: '500000005', password: 'johan1234',  role: 'staff',   status: 'pending' },
+    { name: 'Elin Berg',       username: 'elin',    email: 'elin@pdp.pt',    phone: '912000006', nif: '500000006', password: 'elin12345',  role: 'staff',   status: 'pending' },
+    { name: 'Pedro Novo',      username: 'pedro',   email: 'pedro.novo@pdp.pt', phone: '912000007', nif: '500000007', password: 'pedro1234', role: 'courier', status: 'pending' }
+];
+
+// Adds the demo accounts once (and moves data from older prototype versions)
+function pdpSeedUsers() {
+    try {
+        if (localStorage.getItem('pdpUsersSeeded') === '1') return;
+        let users = JSON.parse(localStorage.getItem('registeredUsers')) || [];
+
+        // Old version: staff approved by the admin were only in "adminUsers"
+        const approvedNames = (JSON.parse(localStorage.getItem('adminUsers')) || [])
+            .filter(function (u) { return u.status === 'ACTIVE'; })
+            .map(function (u) { return String(u.name).toUpperCase(); });
+        users.forEach(function (u) {
+            if (u.role === 'staff' && u.status === 'pending' && approvedNames.indexOf(u.name.toUpperCase()) !== -1) {
+                u.status = 'active';
+            }
+        });
+
+        const now = new Date().toISOString();
+        PDP_DEMO_USERS.forEach(function (demo) {
+            const taken = users.some(function (u) {
+                return u.username.toLowerCase() === demo.username || u.email.toLowerCase() === demo.email;
+            });
+            if (!taken) users.push(Object.assign({ created_at: now }, demo));
+        });
+
+        localStorage.setItem('registeredUsers', JSON.stringify(users));
+        localStorage.removeItem('pendingStaff');   // replaced by status 'pending' in this list
+        localStorage.removeItem('adminUsers');     // replaced by this list
+        localStorage.setItem('pdpUsersSeeded', '1');
+    } catch (e) { /* storage blocked: pdpGetUsers falls back to the demo accounts */ }
+}
+
+function pdpGetUsers() {
+    pdpSeedUsers();
+    try {
+        const saved = JSON.parse(localStorage.getItem('registeredUsers'));
+        if (saved) return saved;
+    } catch (e) { /* fall through */ }
+    return JSON.parse(JSON.stringify(PDP_DEMO_USERS));
+}
+
+function pdpSaveUsers(users) { pdpSave('registeredUsers', users); }
+
+function pdpFindUser(username) {
+    return pdpGetUsers().find(function (u) { return u.username === username; }) || null;
+}
+
+// Changes one account; returns the updated account
+function pdpUpdateUser(username, changes) {
+    const users = pdpGetUsers();
+    const user = users.find(function (u) { return u.username === username; });
+    if (!user) return null;
+    Object.assign(user, changes);
+    pdpSaveUsers(users);
+    return user;
+}
+
+// Approve / disable / enable an account.
+// A courier who stops being active hands their unfinished orders back to "Available orders".
+// Returns the number of released orders.
+function pdpSetUserStatus(username, status, byName) {
+    const before = pdpFindUser(username);
+    if (!before) return 0;
+    const changes = { status: status };
+    if (before.status === PDP_USER_STATUS.PENDING && status === PDP_USER_STATUS.ACTIVE) {
+        changes.approvedBy = byName || '';
+        changes.approvedAt = pdpNow();
+    }
+    if (status === PDP_USER_STATUS.DISABLED) changes.disabledAt = pdpNow();
+    const user = pdpUpdateUser(username, changes);
+    return user.role === 'courier' && status !== PDP_USER_STATUS.ACTIVE ? pdpReleaseCourierOrders(user.name) : 0;
+}
+
+// Deletes an account (reject or remove). A courier's vehicles are removed too
+// and their unfinished orders go back to "Available orders". Returns released orders.
+function pdpRemoveUser(username) {
+    const users = pdpGetUsers();
+    const index = users.findIndex(function (u) { return u.username === username; });
+    if (index === -1) return 0;
+    const user = users.splice(index, 1)[0];
+    pdpSaveUsers(users);
+    if (user.role !== 'courier') return 0;
+    pdpSaveVehicles(pdpGetVehicles().filter(function (v) { return v.courier !== user.name; }));
+    return pdpReleaseCourierOrders(user.name);
+}
+
+// 'active', 'pending', 'disabled', or 'unknown' when there is no courier account with this name
 function pdpCourierStatus(name) {
-    if (name === PDP_DEMO_COURIER) return 'active';
-    let users = [];
-    try { users = JSON.parse(localStorage.getItem('registeredUsers')) || []; } catch (e) { users = []; }
-    const user = users.find(function (u) { return u.role === 'courier' && u.name === name; });
+    const user = pdpGetUsers().find(function (u) { return u.role === 'courier' && u.name === name; });
     return user ? user.status : 'unknown';
 }
 
