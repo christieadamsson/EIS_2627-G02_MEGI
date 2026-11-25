@@ -14,6 +14,7 @@ CREATE TABLE user (
     email           VARCHAR(150) NOT NULL UNIQUE,
     phone           VARCHAR(15)  NOT NULL,
     nif             CHAR(9)      NOT NULL,
+    citizen_card    CHAR(12)     NOT NULL UNIQUE,   -- Cartão de Cidadão, stored without spaces, e.g. 123456789ZZ4
     password_hash   VARCHAR(255) NOT NULL,
     role            ENUM('client','courier','staff','admin') NOT NULL,
     account_status  ENUM('active','pending','disabled') NOT NULL DEFAULT 'pending',

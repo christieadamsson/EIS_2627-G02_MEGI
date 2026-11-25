@@ -48,9 +48,23 @@ function pdpPeopleManager(options) {
 
     // --- rendering ---
 
+    // "912000001" or "+351912000001" -> "+351 912 000 001" (Portuguese country code by default)
+    function formatPhone(phone) {
+        const digits = String(phone || '').replace(/[^\d+]/g, '');
+        if (!digits) return '';
+        const match = digits.match(/^(\+\d{1,3})?(\d{9})$/);
+        if (!match) return digits;   // unexpected format: show as entered
+        const code = match[1] || '+351';
+        return code + ' ' + match[2].replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+    }
+
+    // Row 1: username + email   ·   Row 2: phone + NIF + citizen card
     function contactLine(u) {
-        return [u.username ? '@' + u.username : '', u.email, u.phone ? 'Phone ' + u.phone : '', u.nif ? 'NIF ' + u.nif : '']
+        const first = [u.username ? '@' + u.username : '', u.email].filter(Boolean).map(escapeHtml).join(' · ');
+        const second = [u.phone ? 'Phone ' + formatPhone(u.phone) : '', u.nif ? 'NIF ' + u.nif : '',
+                        u.citizenCard ? 'Citizen card ' + pdpFormatCitizenCard(u.citizenCard) : '']
             .filter(Boolean).map(escapeHtml).join(' · ');
+        return first + (second ? '</div><div class="user-role">' + second : '');
     }
 
     function pendingRow(u) {
@@ -112,6 +126,10 @@ function pdpPeopleManager(options) {
                     <div class="profile-field">
                         <label>NIF</label>
                         <input type="text" name="nif" value="${escapeHtml(u.nif)}" placeholder="9 digits">
+                    </div>
+                    <div class="profile-field">
+                        <label>Citizen card number</label>
+                        <input type="text" name="citizenCard" value="${escapeHtml(pdpFormatCitizenCard(u.citizenCard))}" placeholder="e.g. 12345678 9 ZZ4" maxlength="16">
                     </div>
                     <div class="profile-actions">
                         <button type="submit" class="btn-save">Save</button>
@@ -207,6 +225,7 @@ function pdpPeopleManager(options) {
         const email = form.elements.email.value.trim();
         const phone = form.elements.phone.value.replace(/\s/g, '');
         const nif = form.elements.nif.value.trim();
+        const citizenCard = pdpNormalizeCitizenCard(form.elements.citizenCard.value);
 
         function fail(text) {
             msg.className = 'profile-msg profile-msg-error';
@@ -217,8 +236,10 @@ function pdpPeopleManager(options) {
         if (emailTaken(email, username)) return fail('Another account already uses this email.');
         if (phone && !PHONE.test(phone)) return fail('Phone: 9 digits (optionally +351).');
         if (nif && !/^\d{9}$/.test(nif)) return fail('NIF must have 9 digits.');
+        if (citizenCard && !pdpIsValidCitizenCard(citizenCard)) return fail('Citizen card: use the format 12345678 9 ZZ4.');
+        if (citizenCard && pdpCitizenCardTaken(citizenCard, username)) return fail('Another account already uses this citizen card number.');
 
-        pdpUpdateUser(username, { name: name, email: email, phone: phone, nif: nif });
+        pdpUpdateUser(username, { name: name, email: email, phone: phone, nif: nif, citizenCard: citizenCard });
         editing = null;
         changed();
     }
@@ -229,7 +250,8 @@ function pdpPeopleManager(options) {
         const v = function (name) { return form.elements[name].value.trim(); };
         const data = {
             name: v('name'), username: v('username'), email: v('email'),
-            phone: v('phone').replace(/\s/g, ''), nif: v('nif'), password: form.elements.password.value
+            phone: v('phone').replace(/\s/g, ''), nif: v('nif'),
+            citizenCard: pdpNormalizeCitizenCard(v('citizenCard')), password: form.elements.password.value
         };
 
         function fail(text) {
@@ -245,6 +267,8 @@ function pdpPeopleManager(options) {
         if (emailTaken(data.email, null)) return fail('An account with this email already exists.');
         if (!PHONE.test(data.phone)) return fail('Phone: 9 digits (optionally +351).');
         if (!/^\d{9}$/.test(data.nif)) return fail('NIF must have 9 digits.');
+        if (!pdpIsValidCitizenCard(data.citizenCard)) return fail('Citizen card: use the format 12345678 9 ZZ4.');
+        if (pdpCitizenCardTaken(data.citizenCard, null)) return fail('An account with this citizen card number already exists.');
         if (data.password.length < 8 || !/[A-Za-z]/.test(data.password) || !/\d/.test(data.password)) {
             return fail('Temporary password: at least 8 characters with letters and numbers.');
         }

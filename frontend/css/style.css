@@ -489,12 +489,23 @@ footer {
     box-shadow: 0 2px 6px rgba(0,0,0,0.02);
 }
 
+/* Section headings use the display font, like the other headings on the site,
+   so they stand apart from the names in the lists (Inter, 15px) */
 .card h2 {
-    font-size: 18px;
-    font-weight: 800;
-    color: #172b4d;
-    margin-bottom: 20px;
-    letter-spacing: 0.5px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1.1;
+    color: #0f172a;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+}
+
+/* The count next to a heading stays in the body font */
+.card h2 .count-pill {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0;
 }
 
 /* --- 2. Stapeldiagram --- */
@@ -550,7 +561,7 @@ footer {
 }
 
 .user-name {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 15px;
     color: #172b4d;
 }

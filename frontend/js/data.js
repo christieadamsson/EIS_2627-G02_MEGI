@@ -231,14 +231,14 @@ const PDP_USER_STATUS = { PENDING: 'pending', ACTIVE: 'active', DISABLED: 'disab
 
 // Accounts that exist from the start (also listed on 1_login.html)
 const PDP_DEMO_USERS = [
-    { name: 'Carla Cliente',   username: 'client',  email: 'client@pdp.pt',  phone: '912000001', nif: '500000001', password: 'client123',  role: 'client',  status: 'active' },
-    { name: 'Miguel Santos',   username: 'courier', email: 'courier@pdp.pt', phone: '912000002', nif: '500000002', password: 'courier123', role: 'courier', status: 'active', approvedBy: 'Sofia Martins' },
-    { name: 'Sofia Martins',   username: 'staff',   email: 'staff@pdp.pt',   phone: '912000003', nif: '500000003', password: 'staff123',   role: 'staff',   status: 'active', approvedBy: 'Admin PDP' },
-    { name: 'Admin PDP',       username: 'admin',   email: 'admin@pdp.pt',   phone: '912000004', nif: '500000004', password: 'admin123',   role: 'admin',   status: 'active' },
+    { name: 'Carla Cliente',   username: 'client',  email: 'client@pdp.pt',  phone: '912000001', nif: '500000001', citizenCard: '100000011ZZ1', password: 'client123',  role: 'client',  status: 'active' },
+    { name: 'Miguel Santos',   username: 'courier', email: 'courier@pdp.pt', phone: '912000002', nif: '500000002', citizenCard: '100000022ZZ2', password: 'courier123', role: 'courier', status: 'active', approvedBy: 'Sofia Martins' },
+    { name: 'Sofia Martins',   username: 'staff',   email: 'staff@pdp.pt',   phone: '912000003', nif: '500000003', citizenCard: '100000033ZZ3', password: 'staff123',   role: 'staff',   status: 'active', approvedBy: 'Admin PDP' },
+    { name: 'Admin PDP',       username: 'admin',   email: 'admin@pdp.pt',   phone: '912000004', nif: '500000004', citizenCard: '100000044ZZ4', password: 'admin123',   role: 'admin',   status: 'active' },
     // waiting for approval, so the admin and staff pages have something to manage
-    { name: 'Johan Lindström', username: 'johan',   email: 'johan@pdp.pt',   phone: '912000005', nif: '500000005', password: 'johan1234',  role: 'staff',   status: 'pending' },
-    { name: 'Elin Berg',       username: 'elin',    email: 'elin@pdp.pt',    phone: '912000006', nif: '500000006', password: 'elin12345',  role: 'staff',   status: 'pending' },
-    { name: 'Pedro Novo',      username: 'pedro',   email: 'pedro.novo@pdp.pt', phone: '912000007', nif: '500000007', password: 'pedro1234', role: 'courier', status: 'pending' }
+    { name: 'Johan Lindström', username: 'johan',   email: 'johan@pdp.pt',   phone: '912000005', nif: '500000005', citizenCard: '100000055ZZ5', password: 'johan1234',  role: 'staff',   status: 'pending' },
+    { name: 'Elin Berg',       username: 'elin',    email: 'elin@pdp.pt',    phone: '912000006', nif: '500000006', citizenCard: '100000066ZZ6', password: 'elin12345',  role: 'staff',   status: 'pending' },
+    { name: 'Pedro Novo',      username: 'pedro',   email: 'pedro.novo@pdp.pt', phone: '912000007', nif: '500000007', citizenCard: '100000077ZZ7', password: 'pedro1234', role: 'courier', status: 'pending' }
 ];
 
 // Adds the demo accounts once (and moves data from older prototype versions)
@@ -276,9 +276,44 @@ function pdpGetUsers() {
     pdpSeedUsers();
     try {
         const saved = JSON.parse(localStorage.getItem('registeredUsers'));
-        if (saved) return saved;
+        if (saved) {
+            // Demo accounts saved before the citizen card field existed get their number now
+            let filled = false;
+            saved.forEach(function (u) {
+                if (u.citizenCard) return;
+                const demo = PDP_DEMO_USERS.find(function (d) { return d.username === u.username; });
+                if (demo) { u.citizenCard = demo.citizenCard; filled = true; }
+            });
+            if (filled) pdpSave('registeredUsers', saved);
+            return saved;
+        }
     } catch (e) { /* fall through */ }
     return JSON.parse(JSON.stringify(PDP_DEMO_USERS));
+}
+
+// ---------- citizen card number (Cartão de Cidadão) ----------
+// Format: 8-digit civil ID + 1 check digit + 2 version characters + 1 check digit,
+// e.g. "12345678 9 ZZ4". Stored without spaces in capitals ("123456789ZZ4").
+function pdpNormalizeCitizenCard(value) {
+    return String(value || '').replace(/[\s-]/g, '').toUpperCase();
+}
+
+function pdpIsValidCitizenCard(value) {
+    return /^\d{9}[A-Z0-9]{2}\d$/.test(pdpNormalizeCitizenCard(value));
+}
+
+// "123456789ZZ4" -> "12345678 9 ZZ4"
+function pdpFormatCitizenCard(value) {
+    const cc = pdpNormalizeCitizenCard(value);
+    return pdpIsValidCitizenCard(cc) ? cc.slice(0, 8) + ' ' + cc.slice(8, 9) + ' ' + cc.slice(9) : cc;
+}
+
+// true when another account (not exceptUsername) already uses this citizen card number
+function pdpCitizenCardTaken(value, exceptUsername) {
+    const cc = pdpNormalizeCitizenCard(value);
+    return pdpGetUsers().some(function (u) {
+        return u.username !== exceptUsername && pdpNormalizeCitizenCard(u.citizenCard) === cc;
+    });
 }
 
 function pdpSaveUsers(users) { pdpSave('registeredUsers', users); }

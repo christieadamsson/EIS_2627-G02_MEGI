@@ -170,6 +170,7 @@ registerForm.addEventListener('submit', function (e) {
     const emailInput = document.getElementById('reg-email');
     const phoneInput = document.getElementById('reg-phone');
     const nifInput = document.getElementById('reg-nif');
+    const citizenCardInput = document.getElementById('reg-citizen-card');
     const roleInput = document.getElementById('reg-role');
     const passwordInput = document.getElementById('reg-password');
     const confirmInput = document.getElementById('reg-confirm');
@@ -180,6 +181,7 @@ registerForm.addEventListener('submit', function (e) {
     const email = emailInput.value.trim();
     const phone = phoneInput.value.replace(/\s/g, '');
     const nif = nifInput.value.trim();
+    const citizenCard = pdpNormalizeCitizenCard(citizenCardInput.value);
     const role = roleInput.value;
     const password = passwordInput.value;
     let valid = true;
@@ -227,6 +229,17 @@ registerForm.addEventListener('submit', function (e) {
         valid = false;
     }
 
+    if (citizenCard === '') {
+        setFieldError(citizenCardInput, 'Please enter your citizen card number.');
+        valid = false;
+    } else if (!pdpIsValidCitizenCard(citizenCard)) {
+        setFieldError(citizenCardInput, 'Use the format on your card, e.g. 12345678 9 ZZ4.');
+        valid = false;
+    } else if (pdpCitizenCardTaken(citizenCard, null)) {
+        setFieldError(citizenCardInput, 'An account with this citizen card number already exists.');
+        valid = false;
+    }
+
     if (role === '') {
         setFieldError(roleInput, 'Please choose a role.');
         valid = false;
@@ -265,6 +278,7 @@ registerForm.addEventListener('submit', function (e) {
         email: email,
         phone: phone,
         nif: nif,
+        citizenCard: citizenCard,
         password: password,
         role: role,
         status: role === 'client' ? 'active' : 'pending',
