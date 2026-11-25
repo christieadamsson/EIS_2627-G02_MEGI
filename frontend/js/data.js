@@ -217,6 +217,75 @@ function pdpCurrentUser() {
     try { return JSON.parse(localStorage.getItem('currentUser')); } catch (e) { return null; }
 }
 
+function pdpLogout() {
+    try { localStorage.removeItem('currentUser'); } catch (e) { /* storage blocked */ }
+}
+
+// =========================================
+// Page access by role
+// A page declares who may use it:  <body data-require-role="staff">  (several: "staff admin")
+// Anyone else (not logged in, wrong role, or account no longer active) sees a
+// message with a login link instead of the page.
+// Prototype only – in Sprint 2 the PHP backend checks the session (requireRole()).
+// =========================================
+const PDP_ROLE_LABELS = { client: 'Client', courier: 'Courier', staff: 'Staff', admin: 'Admin' };
+
+function pdpHasAccess(roles) {
+    const me = pdpCurrentUser();
+    if (!me || roles.indexOf(me.role) === -1) return false;
+    // The account must still exist and be active (e.g. not disabled after logging in)
+    const account = pdpGetUsers().find(function (u) {
+        return me.username ? u.username === me.username : (u.name === me.name && u.role === me.role);
+    });
+    return !!account && account.status === PDP_USER_STATUS.ACTIVE;
+}
+
+function pdpGuardPage() {
+    const body = document.body;
+    const required = body && body.dataset.requireRole;
+    if (!required) return true;
+    const roles = required.split(/\s+/);
+    if (pdpHasAccess(roles)) return true;
+
+    const me = pdpCurrentUser();
+    const needed = roles.map(function (r) { return PDP_ROLE_LABELS[r] || r; }).join(' or ');
+    const reason = me
+        ? 'You are logged in as ' + (PDP_ROLE_LABELS[me.role] || me.role) + ' (' + me.name + '). This page is only for ' + needed + ' accounts.'
+        : 'Please log in with a ' + needed + ' account to use this page.';
+
+    const main = document.querySelector('main');
+    if (main) main.hidden = true;   // page scripts still load, but nothing can be used
+    const box = document.createElement('section');
+    box.className = 'access-denied';
+    box.setAttribute('role', 'alert');
+    const title = document.createElement('h2');
+    title.textContent = 'No access';
+    const text = document.createElement('p');
+    text.textContent = reason;
+    const link = document.createElement('a');
+    link.href = '1_login.html';
+    link.className = 'btn-save';
+    link.textContent = me ? 'Log in with another account' : 'Go to login';
+    link.addEventListener('click', pdpLogout);
+    box.append(title, text, link);
+    if (main) main.before(box); else body.prepend(box);
+    return false;
+}
+
+// "Login" button in the header becomes "Log out" while someone is logged in
+function pdpSetupLoginButton() {
+    const me = pdpCurrentUser();
+    document.querySelectorAll('.btn-login').forEach(function (button) {
+        if (!me) return;
+        const upper = button.textContent.trim() === button.textContent.trim().toUpperCase();
+        button.textContent = upper ? 'LOG OUT' : 'Log out';
+        button.title = 'Logged in as ' + me.name + ' (' + (PDP_ROLE_LABELS[me.role] || me.role) + ')';
+        button.href = '1_login.html';
+        button.addEventListener('click', pdpLogout);
+    });
+}
+
+
 // =========================================
 // User accounts – ONE list for every page ("registeredUsers")
 //   status: 'pending'  -> registered, waiting for approval (courier: by staff, staff: by admin)
@@ -445,3 +514,12 @@ function pdpAddTileLayer(map) {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 }
+
+// ---------- run on every page (must stay at the END of data.js) ----------
+// data.js is loaded at the end of every page, so the page content already exists here
+try {
+    if (typeof document !== 'undefined' && document.body) {
+        pdpGuardPage();
+        pdpSetupLoginButton();
+    }
+} catch (e) { console.warn('Access check failed', e); }

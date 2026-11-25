@@ -150,6 +150,7 @@
             listId: 'staff-list',
             countId: 'staff-count',
             addFormId: 'add-staff-form',
+            formRole: 'admin',   // only the admin adds staff directly
             onChange: renderKpis
         });
     });

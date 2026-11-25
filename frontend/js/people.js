@@ -1,7 +1,7 @@
 // =========================================
 // People manager – one component for both management pages:
-//   4_admin.html: the admin manages STAFF
-//   5_staff.html: staff manage COURIERS
+//   4_admin.html: the admin manages STAFF (only the admin approves new staff)
+//   5_staff.html: staff manage COURIERS and can PROPOSE new staff for the admin
 // Needs data.js (pdpGetUsers, pdpSetUserStatus, pdpRemoveUser, ...).
 //
 // Usage:
@@ -10,6 +10,10 @@
 //       pendingListId, pendingCountId,    // "waiting for approval" list (approve / reject)
 //       listId, countId,                  // approved accounts (edit / disable / enable / remove)
 //       addFormId,                        // optional: form to create a new account directly
+//       proposeOnly: true,                // optional: the form only PROPOSES an account (status pending,
+//                                         //   someone else approves it); pending rows get no approve/reject
+//       managerLabel: 'Admin' | 'Staff',  // optional: name used when nobody is logged in
+//       formRole: 'admin' | 'staff',      // optional: only this logged-in role may submit the add form
 //       details: function (user) {...},   // optional: extra text per row (e.g. vehicles, orders)
 //       onChange: function () {...}       // optional: called after every change
 //   });
@@ -34,7 +38,8 @@ function pdpPeopleManager(options) {
     // Name of whoever is managing (shown as "approved by ...")
     function managerName() {
         const me = pdpCurrentUser();
-        return me && me.name ? me.name : (role === 'staff' ? 'Admin' : 'Staff');
+        if (me && me.name) return me.name;
+        return options.managerLabel || (role === 'staff' ? 'Admin' : 'Staff');
     }
 
     function accounts() {
@@ -67,18 +72,27 @@ function pdpPeopleManager(options) {
         return first + (second ? '</div><div class="user-role">' + second : '');
     }
 
+    // "Proposed by Sofia Martins on …" or "Registered online on …"
+    function originLine(u) {
+        const when = pdpFormatDateTime(u.created_at);
+        const text = u.proposedBy ? 'Proposed by ' + u.proposedBy : 'Registered online';
+        return escapeHtml(text + (when ? ' on ' + when : ''));
+    }
+
     function pendingRow(u) {
+        // A page that only proposes accounts cannot approve them
+        const actionsHtml = options.proposeOnly
+            ? '<span class="badge-pending">Waiting for admin</span>'
+            : `<button type="button" class="btn-approve" data-people-action="approve" data-user="${escapeHtml(u.username)}">Approve</button>
+               <button type="button" class="btn-reject" data-people-action="reject" data-user="${escapeHtml(u.username)}">Reject</button>`;
         return `
             <li class="user-item">
                 <div>
                     <div class="user-name">${escapeHtml(u.name)}</div>
                     <div class="user-role">${contactLine(u)}</div>
-                    <div class="user-role">Registered ${escapeHtml(pdpFormatDateTime(u.created_at)) || '—'}</div>
+                    <div class="user-role">${originLine(u)}</div>
                 </div>
-                <div class="approval-actions">
-                    <button type="button" class="btn-approve" data-people-action="approve" data-user="${escapeHtml(u.username)}">Approve</button>
-                    <button type="button" class="btn-reject" data-people-action="reject" data-user="${escapeHtml(u.username)}">Reject</button>
-                </div>
+                <div class="approval-actions">${actionsHtml}</div>
             </li>`;
     }
 
@@ -244,7 +258,8 @@ function pdpPeopleManager(options) {
         changed();
     }
 
-    // Create an account directly (admin adding staff) – it is active straight away
+    // Create an account: active straight away (admin adding staff),
+    // or pending when this page only proposes it (staff proposing staff)
     function addAccount(form) {
         const msg = form.querySelector('.profile-msg');
         const v = function (name) { return form.elements[name].value.trim(); };
@@ -257,6 +272,9 @@ function pdpPeopleManager(options) {
         function fail(text) {
             msg.className = 'profile-msg profile-msg-error';
             msg.textContent = text;
+        }
+        if (options.formRole && !pdpHasAccess([options.formRole])) {
+            return fail('Only a logged-in ' + (PDP_ROLE_LABELS[options.formRole] || options.formRole) + ' account can do this.');
         }
         if (data.name.length < 3) return fail('Please enter the full name.');
         if (!/^[A-Za-z0-9._]{3,20}$/.test(data.username)) return fail('Username: 3–20 letters, numbers, dot or underscore.');
@@ -274,18 +292,17 @@ function pdpPeopleManager(options) {
         }
 
         const users = pdpGetUsers();
-        users.push(Object.assign(data, {
-            role: role,
-            status: PDP_USER_STATUS.ACTIVE,
-            created_at: pdpNow(),
-            approvedBy: managerName(),
-            approvedAt: pdpNow()
-        }));
+        const extra = options.proposeOnly
+            ? { status: PDP_USER_STATUS.PENDING, proposedBy: managerName() }
+            : { status: PDP_USER_STATUS.ACTIVE, approvedBy: managerName(), approvedAt: pdpNow() };
+        users.push(Object.assign(data, { role: role, created_at: pdpNow() }, extra));
         pdpSaveUsers(users);
 
         form.reset();
         msg.className = 'profile-msg profile-msg-success';
-        msg.textContent = `${data.name} was added and can log in with username "${data.username}".`;
+        msg.textContent = options.proposeOnly
+            ? `${data.name} was proposed. The admin has to approve the account before they can log in.`
+            : `${data.name} was added and can log in with username "${data.username}".`;
         changed();
     }
 

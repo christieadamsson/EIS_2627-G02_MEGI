@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../css/style.css">
 
 </head>
-<body>
+<body data-require-role="staff">
     <!-- header to the website-->
     <header class="navbar">
             <a href="0_homepage.html" class="brand">
@@ -82,6 +82,52 @@
           </div>
         </section>
 
+
+        <!-- Staff can PROPOSE new staff; only the admin approves them (4_admin.html) -->
+        <section class="card">
+          <h2>Propose New Staff Member</h2>
+          <p class="empty-msg">The account stays pending until the admin approves it on the admin page.</p>
+          <form id="propose-staff-form" class="profile-form" novalidate>
+            <div class="profile-field">
+              <label for="propose-staff-name">Full name</label>
+              <input type="text" id="propose-staff-name" name="name" placeholder="Full name" required>
+            </div>
+            <div class="profile-field">
+              <label for="propose-staff-username">Username</label>
+              <input type="text" id="propose-staff-username" name="username" placeholder="e.g. jsilva" required>
+            </div>
+            <div class="profile-field">
+              <label for="propose-staff-email">Email</label>
+              <input type="email" id="propose-staff-email" name="email" placeholder="name@pdp.pt" required>
+            </div>
+            <div class="profile-field">
+              <label for="propose-staff-phone">Phone</label>
+              <input type="tel" id="propose-staff-phone" name="phone" placeholder="9 digits" required>
+            </div>
+            <div class="profile-field">
+              <label for="propose-staff-nif">NIF</label>
+              <input type="text" id="propose-staff-nif" name="nif" placeholder="9 digits" required>
+            </div>
+            <div class="profile-field">
+              <label for="propose-staff-citizen-card">Citizen card number</label>
+              <input type="text" id="propose-staff-citizen-card" name="citizenCard" placeholder="e.g. 12345678 9 ZZ4" maxlength="16" required>
+            </div>
+            <div class="profile-field">
+              <label for="propose-staff-password">Temporary password</label>
+              <input type="password" id="propose-staff-password" name="password" placeholder="min. 8, letters + numbers" required>
+            </div>
+            <div class="profile-actions">
+              <button type="submit" class="btn-save">Propose staff</button>
+              <span class="profile-msg" role="status"></span>
+            </div>
+          </form>
+        </section>
+
+        <!-- Staff accounts waiting for the admin (read-only here) -->
+        <section class="card">
+          <h2>Staff Waiting For Admin Approval <span class="count-pill" id="proposed-staff-count">0</span></h2>
+          <ul class="user-list" id="proposed-staff"></ul>
+        </section>
 
         <script src="../js/data.js" defer></script>
         <script src="../js/people.js" defer></script>

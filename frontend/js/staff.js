@@ -6,7 +6,8 @@
 // Needs data.js. Shares all data and rules with the courier page (3_courier.html):
 //   "registeredUsers" -> all accounts (data.js). Staff manage the COURIERS:
 //                        approve / reject new ones, edit, disable / enable, remove
-//                        (shared component in people.js).
+//                        (shared component in people.js). Staff can also PROPOSE
+//                        new staff; those stay pending until the admin approves them.
 //   "pdpVehicles"     -> vehicles couriers register / renew on the courier page.
 //                        Staff sets them to 'Approved' or 'Rejected' (with a reason
 //                        the courier sees in "My vehicles").
@@ -247,6 +248,17 @@
             countId: 'courier-count',
             details: courierDetails,
             onChange: renderStaffPanel   // approving / disabling a courier changes the vehicle table too
+        });
+
+        // Staff may propose new staff members; only the admin approves them (4_admin.html)
+        pdpPeopleManager({
+            role: 'staff',
+            pendingListId: 'proposed-staff',
+            pendingCountId: 'proposed-staff-count',
+            addFormId: 'propose-staff-form',
+            proposeOnly: true,
+            managerLabel: 'Staff',
+            formRole: 'staff'   // only staff may propose
         });
         renderStaffPanel();
     });

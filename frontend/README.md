@@ -74,8 +74,14 @@ and courier `pedro.novo@pdp.pt` (approve on the staff page).
 
 | Manager | Manages | Actions |
 |---|---|---|
-| Admin (`4_admin.html`) | Staff | Approve/reject registrations, add staff directly, edit, disable/enable, remove |
+| Admin (`4_admin.html`) | Staff | Approve/reject registrations and staff proposals, add staff directly, edit, disable/enable, remove |
 | Staff (`5_staff.html`) | Couriers | Approve/reject registrations, edit contact details, disable/enable, remove |
+| Staff (`5_staff.html`) | Staff | **Propose** new staff only – the admin approves or rejects them |
+
+**Page access:** `3_courier.html`, `5_staff.html` and `4_admin.html` only work for a logged-in,
+active account with that role (`<body data-require-role="...">`, checked in `data.js`). Everyone else
+sees a "No access" message. The client page stays open because the homepage links to it for parcel tracking.
+The header "Login" button turns into "Log out" while someone is logged in.
 
 A disabled account cannot log in. Disabling or removing a courier sends their unfinished
 orders back to "Available orders"; removing a courier also removes their vehicles.
