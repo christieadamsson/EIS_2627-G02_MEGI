@@ -149,6 +149,14 @@ function renderLoad(route) {
     fill.classList.toggle('over', max > 0 && weight > max);
 }
 
+// "Placed 24 Nov 2026, 10:15 · Accepted 24 Nov 2026, 11:02 · ..."
+function orderRowDates(order) {
+    const parts = ['Placed ' + pdpFormatDateTime(order.createdAt)];
+    if (order.acceptedAt) parts.push('Accepted ' + pdpFormatDateTime(order.acceptedAt));
+    if (order.pickedUpAt) parts.push('Picked up ' + pdpFormatDateTime(order.pickedUpAt));
+    return escapeHtml(parts.join(' · '));
+}
+
 function orderRow(order, buttonsHtml) {
     return `
         <div class="order-row">
@@ -156,6 +164,7 @@ function orderRow(order, buttonsHtml) {
                 <div class="order-row-id">${escapeHtml(order.id)}</div>
                 <div class="order-row-name">${escapeHtml(order.recipient)}</div>
                 <div class="order-row-meta">${escapeHtml(order.address)} · ${escapeHtml(order.product.weightKg)} kg${order.attempt > 1 ? ' · attempt ' + order.attempt : ''}</div>
+                <div class="order-row-meta">${orderRowDates(order)}</div>
                 <span class="status-badge ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
             </div>
             <div class="order-row-actions">${buttonsHtml}</div>
@@ -207,7 +216,7 @@ function renderCompleted(completed) {
             <td><strong>${escapeHtml(o.id)}</strong></td>
             <td>${escapeHtml(o.recipient)}</td>
             <td>${escapeHtml(o.address)}</td>
-            <td>${escapeHtml(o.completedAt || '')}</td>
+            <td>${escapeHtml(pdpFormatDateTime(o.completedAt))}</td>
             <td>${escapeHtml(o.vehicle || '')}</td>
             <td><span class="status-badge status-completed">${escapeHtml(o.pod ? o.pod.type : '')}</span></td>
         </tr>`;
@@ -413,13 +422,13 @@ function addToRoute(id) {
             ') carries at most ' + vehicle.maxVolM3 + ' m³.');
         return;
     }
-    updateOrder(id, { courier: ME });
+    updateOrder(id, { courier: ME, acceptedAt: pdpNow() });
     showMessage('success', id + ' added to your route.');
     render();
 }
 
 function removeFromRoute(id) {
-    updateOrder(id, { courier: null });
+    updateOrder(id, { courier: null, acceptedAt: null });
     showMessage('success', id + ' removed from your route.');
     render();
 }
@@ -455,8 +464,9 @@ function startRoute() {
         return;
     }
 
+    const pickedUpAt = pdpNow();
     route.forEach(function (o) {
-        updateOrder(o.id, { status: PDP_STATUS.IN_PROGRESS, vehicle: vehicle.plate });
+        updateOrder(o.id, { status: PDP_STATUS.IN_PROGRESS, vehicle: vehicle.plate, pickedUpAt: pickedUpAt });
     });
     showMessage('success', 'Route started with ' + route.length + ' order(s) using ' + vehicle.plate + '.');
     render();
@@ -466,7 +476,8 @@ function cancelOrder(id) {
     if (!confirm('Cancel delivery of ' + id + '? The order goes back to the list of available orders.')) return;
     const order = pdpGetOrders().find(function (o) { return o.id === id; });
     // This attempt is cancelled; the order returns to the list for a new attempt
-    updateOrder(id, { status: PDP_STATUS.INITIATED, courier: null, vehicle: null, attempt: order.attempt + 1 });
+    updateOrder(id, { status: PDP_STATUS.INITIATED, courier: null, vehicle: null, attempt: order.attempt + 1,
+                      acceptedAt: null, pickedUpAt: null, cancelledAt: pdpNow() });
     showMessage('success', id + ' was cancelled and returned to the available orders (attempt ' + (order.attempt + 1) + ').');
     render();
 }
@@ -581,7 +592,7 @@ function submitPod() {
     }
 
     const id = podOrderId;
-    updateOrder(id, { status: PDP_STATUS.COMPLETED, completedAt: pdpDaysFromToday(0), pod: pod });
+    updateOrder(id, { status: PDP_STATUS.COMPLETED, completedAt: pdpNow(), pod: pod });
     closePod();
 
     const remaining = routeOrders(pdpGetOrders()).length;

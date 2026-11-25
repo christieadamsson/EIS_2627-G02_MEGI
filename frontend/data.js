@@ -23,6 +23,55 @@ function pdpDaysFromToday(days) {
     return d.toISOString().slice(0, 10);
 }
 
+// ---------- order timestamps ----------
+// Every step of an order stores the exact moment it happened (ISO date + time):
+//   createdAt   – client placed the order
+//   acceptedAt  – a courier accepted it (added it to their route)
+//   pickedUpAt  – the courier started the route (parcel picked up)
+//   completedAt – delivered with proof of delivery
+//   cancelledAt – the last delivery attempt was cancelled
+
+// Current moment as an ISO string, e.g. 2026-11-25T14:32:10.000Z
+function pdpNow() {
+    return new Date().toISOString();
+}
+
+// A moment N days (and optional hours) from now – used for the sample data
+function pdpDateTimeFromNow(days, hours) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    d.setHours(d.getHours() + (hours || 0));
+    return d.toISOString();
+}
+
+// Readable date for the pages, e.g. "25 Nov 2026, 14:32".
+// Older saved data only has a date (YYYY-MM-DD); then only the date is shown.
+function pdpFormatDateTime(value) {
+    if (!value) return '';
+    const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+    const d = new Date(dateOnly ? value + 'T12:00:00' : value);
+    if (isNaN(d)) return String(value);
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    if (!dateOnly) { options.hour = '2-digit'; options.minute = '2-digit'; }
+    return d.toLocaleString('en-GB', options);
+}
+
+// The day (YYYY-MM-DD) of a stored timestamp – used to group orders per day
+function pdpDayOf(value) {
+    return value ? String(value).slice(0, 10) : '';
+}
+
+// The steps that already happened for an order, oldest first
+function pdpOrderEvents(order) {
+    return [
+        { label: 'Placed',     at: order.createdAt },
+        { label: 'Accepted by courier', at: order.acceptedAt },
+        { label: 'Picked up',  at: order.pickedUpAt },
+        { label: 'Delivered',  at: order.completedAt },
+        { label: 'Last attempt cancelled', at: order.status !== PDP_STATUS.COMPLETED ? order.cancelledAt : null }
+    ].filter(function (e) { return e.at; });
+}
+
 const PDP_DEFAULT_ORDERS = [
     {
         id: 'RR-1042', client: 'Carla Cliente', recipient: 'Ana Silva',
@@ -30,7 +79,8 @@ const PDP_DEFAULT_ORDERS = [
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1489, destLng: -8.6062,
         product: { description: 'Shoe box', category: 'Clothing', weightKg: 2.5, volumeM3: 0.012 },
         status: 'In Progress', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
-        createdAt: pdpDaysFromToday(-1), completedAt: null, pod: null
+        createdAt: pdpDateTimeFromNow(-1, -3), acceptedAt: pdpDateTimeFromNow(-1, -2), pickedUpAt: pdpDateTimeFromNow(0, -1),
+        completedAt: null, cancelledAt: null, pod: null
     },
     {
         id: 'RR-1043', client: 'Empresa Norte Lda', recipient: 'Tiago Ferreira',
@@ -38,7 +88,8 @@ const PDP_DEFAULT_ORDERS = [
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1655, destLng: -8.5985,
         product: { description: 'Office supplies', category: 'Documents', weightKg: 6, volumeM3: 0.03 },
         status: 'Initiated', attempt: 1, courier: null, vehicle: null,
-        createdAt: pdpDaysFromToday(0), completedAt: null, pod: null
+        createdAt: pdpDateTimeFromNow(0, -2), acceptedAt: null, pickedUpAt: null,
+        completedAt: null, cancelledAt: null, pod: null
     },
     {
         id: 'RR-1040', client: 'Carla Cliente', recipient: 'Rita Alves',
@@ -46,7 +97,8 @@ const PDP_DEFAULT_ORDERS = [
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1430, destLng: -8.6140,
         product: { description: 'Ceramic vase', category: 'Fragile', weightKg: 4, volumeM3: 0.02 },
         status: 'In Progress', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
-        createdAt: pdpDaysFromToday(-1), completedAt: null, pod: null
+        createdAt: pdpDateTimeFromNow(-1, -1), acceptedAt: pdpDateTimeFromNow(-1, 0), pickedUpAt: pdpDateTimeFromNow(0, -1),
+        completedAt: null, cancelledAt: null, pod: null
     },
     {
         id: 'RR-1039', client: 'Empresa Norte Lda', recipient: 'Marta Reis',
@@ -54,7 +106,8 @@ const PDP_DEFAULT_ORDERS = [
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1520, destLng: -8.6190,
         product: { description: 'Laptop', category: 'Electronics', weightKg: 3, volumeM3: 0.015 },
         status: 'Initiated', attempt: 2, courier: null, vehicle: null,
-        createdAt: pdpDaysFromToday(-2), completedAt: null, pod: null
+        createdAt: pdpDateTimeFromNow(-2, -4), acceptedAt: null, pickedUpAt: null,
+        completedAt: null, cancelledAt: pdpDateTimeFromNow(-1, -5), pod: null
     },
     {
         id: 'RR-1041', client: 'Carla Cliente', recipient: 'João Costa',
@@ -62,7 +115,8 @@ const PDP_DEFAULT_ORDERS = [
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1475, destLng: -8.6110,
         product: { description: 'Books', category: 'Other', weightKg: 5, volumeM3: 0.02 },
         status: 'Completed', attempt: 1, courier: 'Miguel Santos', vehicle: 'AA-12-BC',
-        createdAt: pdpDaysFromToday(-3), completedAt: pdpDaysFromToday(-2), pod: { type: 'Signature' }
+        createdAt: pdpDateTimeFromNow(-3, -2), acceptedAt: pdpDateTimeFromNow(-3, -1), pickedUpAt: pdpDateTimeFromNow(-2, -3),
+        completedAt: pdpDateTimeFromNow(-2, -2), cancelledAt: null, pod: { type: 'Signature' }
     },
     {
         id: 'RR-1036', client: 'Carla Cliente', recipient: 'Pedro Lopes',
@@ -70,7 +124,8 @@ const PDP_DEFAULT_ORDERS = [
         originLat: 41.1780, originLng: -8.5980, destLat: 41.1407, destLng: -8.6131,
         product: { description: 'Headphones', category: 'Electronics', weightKg: 1, volumeM3: 0.005 },
         status: 'Completed', attempt: 1, courier: 'Miguel Santos', vehicle: '45-XY-90',
-        createdAt: pdpDaysFromToday(-4), completedAt: pdpDaysFromToday(-3), pod: { type: 'Photo' }
+        createdAt: pdpDateTimeFromNow(-4, -5), acceptedAt: pdpDateTimeFromNow(-4, -4), pickedUpAt: pdpDateTimeFromNow(-3, -3),
+        completedAt: pdpDateTimeFromNow(-3, -2), cancelledAt: null, pod: { type: 'Photo' }
     }
 ];
 
@@ -139,7 +194,7 @@ function pdpResetData() {
 
 // Saved data from older versions had orders/vehicles of couriers without an account.
 // Clear it once so every page starts from the cleaned sample data above.
-const PDP_DATA_VERSION = '2';
+const PDP_DATA_VERSION = '3';   // 3: orders store date + time of every step
 try {
     if (localStorage.getItem('pdpDataVersion') !== PDP_DATA_VERSION) {
         ['pdpOrders', 'pdpVehicles', 'pdpCourierVehicle'].forEach(function (key) { localStorage.removeItem(key); });
@@ -214,10 +269,15 @@ function pdpReleaseCourierOrders(courierName) {
     orders.forEach(function (o) {
         if (o.courier !== courierName) return;
         if (o.status !== PDP_STATUS.INITIATED && o.status !== PDP_STATUS.IN_PROGRESS) return;
-        if (o.status === PDP_STATUS.IN_PROGRESS) o.attempt += 1;
+        if (o.status === PDP_STATUS.IN_PROGRESS) {
+            o.attempt += 1;
+            o.cancelledAt = pdpNow();
+        }
         o.status = PDP_STATUS.INITIATED;
         o.courier = null;
         o.vehicle = null;
+        o.acceptedAt = null;
+        o.pickedUpAt = null;
         released++;
     });
     if (released) pdpSaveOrders(orders);

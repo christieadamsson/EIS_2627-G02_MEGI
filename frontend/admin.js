@@ -137,7 +137,7 @@
             days.push({
                 label: i === 0 ? 'Today' : new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short' }),
                 date: date,
-                count: orders.filter(function (o) { return o.completedAt === date; }).length
+                count: orders.filter(function (o) { return pdpDayOf(o.completedAt) === date; }).length
             });
         }
         return days;

@@ -82,7 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const trackingInput = document.getElementById('tracking-input');
     const trackingError = document.getElementById('tracking-input-error');
 
-    const STEPS = ['Order received', 'In progress', 'Delivered'];
+    // Each tracking step and the order field that holds its date
+    const STEPS = [
+        { label: 'Order received',      field: 'createdAt' },
+        { label: 'Accepted by courier', field: 'acceptedAt' },
+        { label: 'In progress',         field: 'pickedUpAt' },
+        { label: 'Delivered',           field: 'completedAt' }
+    ];
 
     function renderTracking(order) {
         const result = document.getElementById('tracking-result');
@@ -91,26 +97,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const details = document.getElementById('tracking-details');
 
         let current = 0;
-        if (order.status === PDP_STATUS.IN_PROGRESS) current = 1;
-        if (order.status === PDP_STATUS.COMPLETED) current = 3;   // all steps done
+        if (order.status === PDP_STATUS.INITIATED && order.courier) current = 1;
+        if (order.status === PDP_STATUS.IN_PROGRESS) current = 2;
+        if (order.status === PDP_STATUS.COMPLETED) current = STEPS.length;   // all steps done
 
-        heading.textContent = order.id + ' · ' + (order.status === PDP_STATUS.INITIATED ? 'ORDER RECEIVED' :
-            order.status === PDP_STATUS.COMPLETED ? 'DELIVERED' : order.status.toUpperCase());
+        heading.textContent = order.id + ' · ' + (order.status === PDP_STATUS.INITIATED
+            ? (order.courier ? 'ACCEPTED BY COURIER' : 'ORDER RECEIVED')
+            : order.status === PDP_STATUS.COMPLETED ? 'DELIVERED' : order.status.toUpperCase());
 
         timeline.innerHTML = STEPS.map((step, i) => {
             let cls = 'timeline-step';
-            if (order.status === PDP_STATUS.CANCELLED && i === 1) cls += ' is-cancelled';
+            if (order.status === PDP_STATUS.CANCELLED && i === 2) cls += ' is-cancelled';
             else if (i < current) cls += ' is-complete';
             else if (i === current) cls += ' is-current';
-            return `<li class="${cls}"${i === current ? ' aria-current="step"' : ''}>${step}</li>`;
+            // Only show a date for steps that really happened
+            const at = i <= current ? order[step.field] : null;
+            const time = at ? `<span class="timeline-time">${escapeHtml(pdpFormatDateTime(at))}</span>` : '';
+            return `<li class="${cls}"${i === current ? ' aria-current="step"' : ''}>${step.label}${time}</li>`;
         }).join('');
 
         let html = `<p>To ${escapeHtml(order.recipient)} · ${escapeHtml(order.address)}</p>
             <p>From ${order.originLat.toFixed(4)}, ${order.originLng.toFixed(4)} → To ${order.destLat.toFixed(4)}, ${order.destLng.toFixed(4)}</p>
             <p>${escapeHtml(order.product.description)} (${escapeHtml(order.product.category)}) · ${escapeHtml(order.product.weightKg)} kg</p>`;
         if (order.courier) html += `<p>Courier: ${escapeHtml(order.courier)}${order.vehicle ? ' · Vehicle ' + escapeHtml(order.vehicle) : ''}</p>`;
-        if (order.attempt > 1 && order.status !== PDP_STATUS.COMPLETED) html += `<p>Delivery attempt ${order.attempt} – an earlier attempt was cancelled.</p>`;
-        if (order.status === PDP_STATUS.COMPLETED) html += `<p>Delivered on ${escapeHtml(order.completedAt)} · Proof: ${escapeHtml(order.pod ? order.pod.type : '—')}</p>`;
+        if (order.attempt > 1 && order.status !== PDP_STATUS.COMPLETED) {
+            html += `<p>Delivery attempt ${order.attempt} – an earlier attempt was cancelled` +
+                (order.cancelledAt ? ` on ${escapeHtml(pdpFormatDateTime(order.cancelledAt))}` : '') + `.</p>`;
+        }
+        if (order.status === PDP_STATUS.COMPLETED) html += `<p>Delivered on ${escapeHtml(pdpFormatDateTime(order.completedAt))} · Proof: ${escapeHtml(order.pod ? order.pod.type : '—')}</p>`;
         details.innerHTML = html;
         result.hidden = false;
     }
@@ -161,12 +175,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return '';
     }
 
+    // Placed date + the latest step, e.g. "Placed 24 Nov 2026, 10:15 · Delivered 25 Nov 2026, 09:40"
+    function orderCardDates(o) {
+        const events = pdpOrderEvents(o);
+        const lines = ['Placed ' + pdpFormatDateTime(o.createdAt)];
+        const latest = events[events.length - 1];
+        if (latest && latest.label !== 'Placed') lines.push(latest.label + ' ' + pdpFormatDateTime(latest.at));
+        return lines.map(escapeHtml).join('<br>');
+    }
+
     function orderCard(o) {
         return `
             <div class="order-card">
                 <div class="order-info">
                     <strong>${escapeHtml(o.recipient)} — ${escapeHtml(o.id)}</strong>
                     <span>${escapeHtml(o.address)}<br>${o.originLat.toFixed(4)}, ${o.originLng.toFixed(4)} → ${o.destLat.toFixed(4)}, ${o.destLng.toFixed(4)}</span>
+                    <span class="order-dates">${orderCardDates(o)}</span>
                     <span class="status-badge-inline ${badgeClass(o.status)}">${escapeHtml(o.status)}</span>
                 </div>
                 <button type="button" class="btn-view-status" data-id="${escapeHtml(o.id)}">View status</button>
@@ -175,7 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderOrders() {
         const orders = pdpGetOrders();
-        const mine = orders.filter(o => o.client === CLIENT);
+        // Newest orders first
+        const mine = orders.filter(o => o.client === CLIENT)
+            .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
         const active = mine.filter(o => o.status === PDP_STATUS.INITIATED || o.status === PDP_STATUS.IN_PROGRESS);
         const history = mine.filter(o => o.status === PDP_STATUS.COMPLETED || o.status === PDP_STATUS.CANCELLED);
 
@@ -577,8 +603,11 @@ document.addEventListener('DOMContentLoaded', () => {
             attempt: 1,
             courier: null,
             vehicle: null,
-            createdAt: pdpDaysFromToday(0),
+            createdAt: pdpNow(),
+            acceptedAt: null,
+            pickedUpAt: null,
             completedAt: null,
+            cancelledAt: null,
             pod: null
         };
         const orders = pdpGetOrders();

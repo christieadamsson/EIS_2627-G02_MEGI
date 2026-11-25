@@ -1074,6 +1074,14 @@ footer {
     color: #073b55;
 }
 
+.timeline-time {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
 .tracking-details {
     max-width: 720px;
     color: #607986;
