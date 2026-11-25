@@ -54,7 +54,7 @@ An internet connection is needed for the maps to load.
 ## How to run
 
 ### Sprint 1 prototype (no backend)
-Open the folder in VS Code and start **Live Server** on `index.html`
+Open the folder in VS Code and start **Live Server** on `html/index.html`
 (the port is set to `5501` in `.vscode/settings.json`).
 
 Demo accounts (prototype only):
@@ -87,8 +87,8 @@ To reset the prototype data, clear the site's `localStorage` in the browser DevT
 Live Server **cannot run PHP**. Serve the frontend and backend from the **same origin**
 so the login session cookie works:
 
-- **XAMPP:** place the repository in `htdocs/` and open `http://localhost/<repo-folder>/frontend/`
-- **or** from the repository root: `php -S localhost:8000` and open `http://localhost:8000/frontend/`
+- **XAMPP:** place the repository in `htdocs/` and open `http://localhost/<repo-folder>/frontend/html/`
+- **or** from the repository root: `php -S localhost:8000` and open `http://localhost:8000/frontend/html/`
 
 Import [`../database/schema.sql`](../database/schema.sql) in phpMyAdmin first.
 All sample accounts in the database use the password `password`

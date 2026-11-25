@@ -99,7 +99,7 @@ main {
 .hero {
     min-height: 540px;
     background: linear-gradient(rgba(16, 25, 35, 0.75), rgba(16, 25, 35, 0.65)),
-                url('delivery_pic.jpg') center/cover no-repeat;
+                url('../pictures%20and%20er/delivery_pic.jpg') center/cover no-repeat;
     display: flex;
     align-items: center;
     padding: 60px;
