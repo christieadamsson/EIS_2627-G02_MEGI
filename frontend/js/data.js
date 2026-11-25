@@ -254,7 +254,12 @@ function pdpGuardPage() {
         : 'Please log in with a ' + needed + ' account to use this page.';
 
     const main = document.querySelector('main');
-    if (main) main.hidden = true;   // page scripts still load, but nothing can be used
+    // Page scripts still load, but nothing can be seen or used.
+    // style.display is needed too: CSS like ".dashboard { display: flex }" overrides the hidden attribute.
+    if (main) {
+        main.hidden = true;
+        main.style.display = 'none';
+    }
     const box = document.createElement('section');
     box.className = 'access-denied';
     box.setAttribute('role', 'alert');

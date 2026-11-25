@@ -54,7 +54,7 @@ An internet connection is needed for the maps to load.
 ## How to run
 
 ### Sprint 1 prototype (no backend)
-Open the folder in VS Code and start **Live Server** on `html/index.html`
+Open the repository in VS Code and click **Go Live** – the root `index.html` sends you straight to the homepage
 (the port is set to `5501` in `.vscode/settings.json`).
 
 Demo accounts (prototype only):
