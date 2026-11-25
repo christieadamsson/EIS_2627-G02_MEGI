@@ -62,12 +62,21 @@
         </ul>
       </section>
       
-      <!-- Pending staff approvals -->
-    <section class="card" style="margin-top: 25px;">
-      <h2>Pending Staff Approvals</h2>
-      <div id="staff-approvals-container">
-      </div>
-  </section>
+      <!-- Add new staff members: added straight to the users list above (admin.js) -->
+      <section class="card" style="margin-top: 25px;">
+          <h2>Add New Staff Member</h2>
+          <form id="add-staff-form" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+              <div style="flex: 1; min-width: 200px;">
+                  <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #172b4d;">Name</label>
+                  <input type="text" id="new-staff-name" placeholder="Full name" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: 'Inter', sans-serif;">
+              </div>
+              <div style="flex: 1; min-width: 200px;">
+                  <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #172b4d;">Role</label>
+                  <input type="text" id="new-staff-role" placeholder="e.g. Fleet Assistant" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: 'Inter', sans-serif;">
+              </div>
+              <button type="submit" class="badge badge-active" style="cursor: pointer; border: none; padding: 12px 24px; font-size: 14px;">Add Staff</button>
+          </form>
+      </section>
     </main>
 
 

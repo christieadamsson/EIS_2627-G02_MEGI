@@ -4,8 +4,7 @@
 //   "registeredUsers" -> accounts created on 1_login.html (login.js)
 //   "pdpOrders"       -> orders shared with client/courier pages (data.js)
 //   "pdpVehicles"     -> vehicles audited by staff (data.js, staff.js)
-//   "pendingStaff"    -> staff waiting for admin approval (scripts.js)
-//   "adminUsers"      -> users approved by the admin (scripts.js)
+//   "adminUsers"      -> users list; new staff are added here directly by the admin
 // =========================================
 (function () {
     const DAY = 24 * 60 * 60 * 1000;
@@ -41,9 +40,6 @@
             .filter(function (u) { return u.role === 'courier'; })
             .map(function (u) { return u.name; }));
         const vehicles = pdpGetVehicles().filter(function (v) { return courierNames.indexOf(v.courier) !== -1; });
-        const pendingStaff = readJSON('pendingStaff', [
-            { name: 'Johan Lindström' }, { name: 'Elin Berg' } // same default as scripts.js
-        ]);
         const adminUsers = readJSON('adminUsers', typeof dashboardData !== 'undefined' ? dashboardData.users : []);
 
         const delivered = orders.filter(function (o) { return o.status === PDP_STATUS.COMPLETED; }).length;
@@ -66,7 +62,6 @@
         registered.forEach(function (user) {
             if (user.role === 'staff' && user.status === 'active') staffNames.add(user.name);
         });
-        pendingStaff.forEach(function (user) { staffNames.add(user.name); });
 
         let expiredDocs = 0;
         let expiringDocs = 0;
@@ -96,8 +91,7 @@
             { group: 'People', items: [
                 { title: 'Active couriers', value: activeCouriers },
                 { title: 'Couriers to approve', value: pendingCouriers, warn: pendingCouriers > 0 },
-                { title: 'Total staff', value: staffNames.size, note: 'active and pending approval' },
-                { title: 'Staff to approve', value: pendingStaff.length, warn: pendingStaff.length > 0 },
+                { title: 'Active staff', value: staffNames.size },
                 { title: 'Clients', value: clients }
             ] }
         ];
@@ -163,16 +157,6 @@
                 </div>`;
         }).join('');
     }
-
-    // Approving/rejecting staff (scripts.js) changes the KPIs, so refresh them afterwards
-    ['approveStaff', 'rejectStaff'].forEach(function (name) {
-        const original = window[name];
-        if (typeof original !== 'function') return;
-        window[name] = function (index) {
-            original(index);
-            renderKpis();
-        };
-    });
 
     // --- 3. Users list: edit personal information / remove user ---
 
@@ -257,7 +241,7 @@
         }).join('');
     }
 
-    // scripts.js calls renderUsers() on load and after approving staff -> use this version on the admin page
+    // scripts.js calls renderUsers() on load -> use this version on the admin page
     window.renderUsers = renderUserList;
 
     function saveUserEdit(form) {
@@ -321,12 +305,36 @@
         });
     }
 
-    // --- 4. Start ---
+    // --- 4. Add new staff member: goes straight into the users list as ACTIVE ---
+
+    function setupAddStaffForm() {
+        const form = document.getElementById('add-staff-form');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('new-staff-name').value.trim();
+            const role = document.getElementById('new-staff-role').value.trim();
+            if (!name || !role) return;
+
+            const users = getUsers();
+            users.push({ name: name.toUpperCase(), role: role.toUpperCase(), status: 'ACTIVE' });
+            saveJSON('adminUsers', users);
+
+            form.reset();
+            renderUserList();
+            renderKpis();
+            alert(`${name} was added as ${role}.`);
+        });
+    }
+
+    // --- 5. Start ---
 
     document.addEventListener('DOMContentLoaded', function () {
         renderKpis();
         renderDeliveryChart(); // replaces the static chart from scripts.js
         setupUserList();
         renderUserList();
+        setupAddStaffForm();
     });
 })();

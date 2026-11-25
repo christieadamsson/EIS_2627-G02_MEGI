@@ -51,22 +51,8 @@ function findUserByEmail(email) {
     });
 }
 
-// Staff registered here appear under "Pending staff approvals" on the Admin page
-// (scripts.js reads the same "pendingStaff" list). Once the admin approves them,
-// they are in "adminUsers" and may log in.
-function addToPendingStaff(name) {
-    let pendingStaff = JSON.parse(localStorage.getItem('pendingStaff'));
-    if (!pendingStaff) {
-        // same default list scripts.js shows when nothing is saved yet
-        pendingStaff = [
-            { name: 'Johan Lindström', role: 'Logistics Coordinator' },
-            { name: 'Elin Berg', role: 'Fleet Assistant' }
-        ];
-    }
-    pendingStaff.push({ name: name, role: 'Staff (registered online)' });
-    localStorage.setItem('pendingStaff', JSON.stringify(pendingStaff));
-}
-
+// Staff accounts can log in once the admin has added them (same name, ACTIVE)
+// with "Add New Staff Member" on the Admin page, which saves them in "adminUsers".
 function isApprovedByAdmin(user) {
     const adminUsers = readStorage('adminUsers');
     return adminUsers.some(function (u) {
@@ -307,10 +293,6 @@ registerForm.addEventListener('submit', function (e) {
     const registered = readStorage('registeredUsers');
     registered.push(newUser);
     localStorage.setItem('registeredUsers', JSON.stringify(registered));
-
-    if (role === 'staff') {
-        addToPendingStaff(name);
-    }
 
     registerForm.reset();
     showForm('login');

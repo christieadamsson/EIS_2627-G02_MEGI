@@ -85,7 +85,7 @@ All sample accounts in the database use the password `password`
 ## Sprint 2 migration plan (localStorage → REST API)
 
 Every page currently reads and writes `localStorage` (`pdpOrders`, `pdpVehicles`,
-`registeredUsers`, `currentUser`, `pendingStaff`, `adminUsers`).
+`registeredUsers`, `currentUser`, `adminUsers`).
 These are replaced by calls to the backend:
 
 1. Add a small `api.js` with one `fetch` wrapper (JSON, `credentials: 'same-origin'`, error handling).

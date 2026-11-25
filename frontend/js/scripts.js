@@ -118,102 +118,12 @@ tbody.innerHTML = dispatchData.map(item => {
 }).join('');
 }
 
-function renderStaffApprovals() {
-const container = document.getElementById("staff-approvals-container");
-if (!container) return;
-
-let pendingStaff = JSON.parse(localStorage.getItem("pendingStaff")) || [
-  { name: "Johan Lindström", role: "Logistics Coordinator" },
-  { name: "Elin Berg", role: "Fleet Assistant" }
-];
-
-if (pendingStaff.length === 0) {
-  container.innerHTML = "<p style='color: #7a869a; font-size: 14px; padding: 10px 0;'>No pending staff approvals at the moment.</p>";
-  return;
-}
-
-container.innerHTML = pendingStaff.map((staff, index) => `
-  <li class="user-item">
-    <div>
-      <div class="user-name">${staff.name}</div>
-      <div class="user-role">${staff.role}</div>
-    </div>
-    <div style="display: flex; gap: 10px;">
-      <button onclick="approveStaff(${index})" class="badge badge-active" style="cursor: pointer; border: none; padding: 8px 16px;">Approve</button>
-      <button onclick="rejectStaff(${index})" class="badge badge-disabled" style="cursor: pointer; padding: 8px 16px;">Reject</button>
-    </div>
-  </li>
-`).join('');
-}
-
-
-// --- 3. handling approved and reject  ---
-
-window.approveStaff = function(index) {
-let pendingStaff = JSON.parse(localStorage.getItem("pendingStaff")) || [];
-let users = JSON.parse(localStorage.getItem("adminUsers")) || dashboardData.users;
-
-const approved = pendingStaff[index];
-
-// adds user and adds ACTIVE
-users.push({
-  name: approved.name.toUpperCase(),
-  role: approved.role.toUpperCase(),
-  status: "ACTIVE"
-});
-
-// removes from pendingStaff
-pendingStaff.splice(index, 1);
-
-// saves in local storage 
-localStorage.setItem("adminUsers", JSON.stringify(users));
-localStorage.setItem("pendingStaff", JSON.stringify(pendingStaff));
-
-// Updates
-renderUsers();
-renderStaffApprovals();
-
-alert(`Approved ${approved.name} and moved to Users!`);
-};
-
-window.rejectStaff = function(index) {
-let pendingStaff = JSON.parse(localStorage.getItem("pendingStaff")) || [];
-alert(`Rejected ${pendingStaff[index].name}.`);
-pendingStaff.splice(index, 1);
-localStorage.setItem("pendingStaff", JSON.stringify(pendingStaff));
-renderStaffApprovals();
-};
-
-
-// --- 4. event lisener  ---
+// --- 3. event lisener  ---
 
 document.addEventListener("DOMContentLoaded", () => {
-// activetes daschboard data and renders the stats, chart, users, dispatch table, and staff approvals
+// activetes daschboard data and renders the stats, chart, users and dispatch table
 renderStats(dashboardData.stats);
 renderChart(dashboardData.weeklyDeliveries);
 renderUsers();
 renderDispatchTable();
-renderStaffApprovals();
-
-// Handles the form submission for adding new staff to pending approvals
-const staffForm = document.getElementById("add-staff-form");
-if (staffForm) {
-  staffForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    
-    const name = document.getElementById("new-staff-name").value;
-    const role = document.getElementById("new-staff-role").value;
-    
-    let pendingStaff = JSON.parse(localStorage.getItem("pendingStaff")) || [
-      { name: "Grey berg", role: "Logistics Coordinator" },
-      { name: "Elin berg", role: "Fleet Assistant" }
-    ];
-    
-    pendingStaff.push({ name, role });
-    localStorage.setItem("pendingStaff", JSON.stringify(pendingStaff));
-    
-    alert(`Successfully added ${name} to Pending Staff Approvals!`);
-    staffForm.reset();
-  });
-}
 });
