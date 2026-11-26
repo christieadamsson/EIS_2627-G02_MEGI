@@ -2430,3 +2430,28 @@ footer {
     background-color: #fff5f4;
 }
 
+/* Courier page: "All deliveries" table (who has what) */
+.panel-note {
+    margin-left: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.all-deliveries-table .row-mine td {
+    background-color: #eaf8fe;
+}
+
+.all-deliveries-table td:nth-child(3) {
+    white-space: normal;
+    min-width: 180px;
+}
+
+.status-badge.status-waiting {
+    background-color: #fff6e0;
+    color: #7a4b00;
+}
+

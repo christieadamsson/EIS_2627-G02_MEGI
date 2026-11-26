@@ -231,6 +231,44 @@ function renderAvailable(available, started) {
     }).join('');
 }
 
+// Every open order of every courier, so colleagues can see who has what.
+// WP3 (backend): "Offered to X – 42 s left" comes from dispatch_offer (query 9 in database/wp3_queries.sql).
+function deliveryState(o) {
+    if (o.status === PDP_STATUS.IN_PROGRESS) return { label: 'On the road', css: 'status-progress', since: o.pickedUpAt };
+    if (o.courier) return { label: 'Accepted', css: 'status-initiated', since: o.acceptedAt };
+    return { label: 'Waiting for a courier', css: 'status-waiting', since: o.createdAt };
+}
+
+function renderAllDeliveries(orders) {
+    const body = document.getElementById('all-deliveries-body');
+    const open = orders.filter(function (o) {
+        return o.status === PDP_STATUS.INITIATED || o.status === PDP_STATUS.IN_PROGRESS;
+    });
+    if (open.length === 0) {
+        body.innerHTML = '<tr><td colspan="7" class="empty-text">No open deliveries right now.</td></tr>';
+        return;
+    }
+    // Waiting orders first, then on the road, then accepted; oldest first inside each group
+    const rank = function (o) { return !o.courier ? 0 : (o.status === PDP_STATUS.IN_PROGRESS ? 1 : 2); };
+    open.sort(function (a, b) {
+        return rank(a) - rank(b) || String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+    });
+    body.innerHTML = open.map(function (o) {
+        const state = deliveryState(o);
+        const mine = o.courier === ME;
+        const courier = o.courier ? (mine ? o.courier + ' (you)' : o.courier) : '—';
+        return `<tr class="${mine ? 'row-mine' : ''}">
+            <td><strong>${escapeHtml(o.id)}</strong></td>
+            <td>${escapeHtml(o.product.description)} · ${escapeHtml(o.product.weightKg)} kg</td>
+            <td>${escapeHtml(o.address)}</td>
+            <td>${escapeHtml(courier)}</td>
+            <td>${escapeHtml(o.vehicle || '—')}</td>
+            <td><span class="status-badge ${state.css}">${escapeHtml(state.label)}</span></td>
+            <td>${escapeHtml(pdpFormatDateTime(state.since))}</td>
+        </tr>`;
+    }).join('');
+}
+
 function renderCompleted(completed) {
     const body = document.getElementById('completed-body');
     if (completed.length === 0) {
@@ -408,6 +446,7 @@ function render() {
     renderRoute(route, started);
     renderAvailable(available, started);
     renderCompleted(completed);
+    renderAllDeliveries(orders);
     renderMap(route);
 }
 

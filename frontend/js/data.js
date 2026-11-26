@@ -126,18 +126,73 @@ const PDP_DEFAULT_ORDERS = [
         status: 'Completed', attempt: 1, courier: 'Constantino Courier', vehicle: '45-XY-90',
         createdAt: pdpDateTimeFromNow(-4, -5), acceptedAt: pdpDateTimeFromNow(-4, -4), pickedUpAt: pdpDateTimeFromNow(-3, -3),
         completedAt: pdpDateTimeFromNow(-3, -2), cancelledAt: null, pod: { type: 'Photo' }
+    },
+    // One finished delivery per extra courier, each in a different part of Porto.
+    // WP3: a courier's location is their last drop-off, so the "nearest courier" differs per order.
+    {
+        id: 'RR-1030', client: 'Carla Cliente', recipient: 'Inês Matos',
+        address: 'Avenida da República 800, Matosinhos',
+        originLat: 41.1780, originLng: -8.5980, destLat: 41.1844, destLng: -8.6963,
+        product: { description: 'Board games', category: 'Other', weightKg: 3, volumeM3: 0.015 },
+        status: 'Completed', attempt: 1, courier: 'Coraline Cargo', vehicle: 'CR-01-AL',
+        createdAt: pdpDateTimeFromNow(-2, -6), acceptedAt: pdpDateTimeFromNow(-2, -5), pickedUpAt: pdpDateTimeFromNow(-2, -4),
+        completedAt: pdpDateTimeFromNow(-2, -3), cancelledAt: null, pod: { type: 'Signature' }
+    },
+    {
+        id: 'RR-1031', client: 'Carla Cliente', recipient: 'Rui Gaio',
+        address: 'Cais de Gaia 120, Vila Nova de Gaia',
+        originLat: 41.1780, originLng: -8.5980, destLat: 41.1370, destLng: -8.6120,
+        product: { description: 'Tea set', category: 'Fragile', weightKg: 2, volumeM3: 0.01 },
+        status: 'Completed', attempt: 1, courier: 'Confucius Courier', vehicle: 'CF-88-WU',
+        createdAt: pdpDateTimeFromNow(-1, -8), acceptedAt: pdpDateTimeFromNow(-1, -7), pickedUpAt: pdpDateTimeFromNow(-1, -6),
+        completedAt: pdpDateTimeFromNow(-1, -5), cancelledAt: null, pod: { type: 'Photo' }
+    },
+    // Colleagues busy right now, so the courier page's "All deliveries" list shows who has what
+    {
+        id: 'RR-1034', client: 'Carla Cliente', recipient: 'Duarte Leça',
+        address: 'Rua Hintze Ribeiro 50, Leça da Palmeira',
+        originLat: 41.1780, originLng: -8.5980, destLat: 41.1910, destLng: -8.7020,
+        product: { description: 'Desk lamp', category: 'Electronics', weightKg: 2, volumeM3: 0.02 },
+        status: 'In Progress', attempt: 1, courier: 'Coraline Cargo', vehicle: 'CR-01-AL',
+        createdAt: pdpDateTimeFromNow(0, -3), acceptedAt: pdpDateTimeFromNow(0, -2), pickedUpAt: pdpDateTimeFromNow(0, -1),
+        completedAt: null, cancelledAt: null, pod: null
+    },
+    {
+        id: 'RR-1035', client: 'Carla Cliente', recipient: 'Beatriz Boavista',
+        address: 'Avenida da Boavista 1500, Porto',
+        originLat: 41.1780, originLng: -8.5980, destLat: 41.1580, destLng: -8.6400,
+        product: { description: 'Bookshelf', category: 'Other', weightKg: 35, volumeM3: 0.45 },
+        status: 'Initiated', attempt: 1, courier: 'Cleopatra Carrier', vehicle: null,
+        createdAt: pdpDateTimeFromNow(0, -2), acceptedAt: pdpDateTimeFromNow(0, -1), pickedUpAt: null,
+        completedAt: null, cancelledAt: null, pod: null
+    },
+    {
+        id: 'RR-1033', client: 'Carla Cliente', recipient: 'Filipa Foz',
+        address: 'Avenida do Brasil 300, Foz do Douro, Porto',
+        originLat: 41.1780, originLng: -8.5980, destLat: 41.1530, destLng: -8.6760,
+        product: { description: 'Garden chairs', category: 'Other', weightKg: 18, volumeM3: 0.4 },
+        status: 'Completed', attempt: 1, courier: 'Cleopatra Carrier', vehicle: 'CL-30-PA',
+        createdAt: pdpDateTimeFromNow(-3, -6), acceptedAt: pdpDateTimeFromNow(-3, -5), pickedUpAt: pdpDateTimeFromNow(-3, -4),
+        completedAt: pdpDateTimeFromNow(-3, -3), cancelledAt: null, pod: { type: 'Photo' }
     }
 ];
 
 // Vehicles registered by couriers (3_courier.html) and audited by staff (5_staff.html).
-// Only vehicles of real courier accounts – here the demo courier from login.js.
+// Only vehicles of real courier accounts (the demo couriers in PDP_DEMO_USERS below).
 const PDP_DEFAULT_VEHICLES = [
     { plate: 'AA-12-BC', model: 'Renault Kangoo', type: 'Van', courier: 'Constantino Courier', maxWeightKg: 650, maxVolM3: 3.3,
       insuranceExpiry: pdpDaysFromToday(200), inspectionExpiry: pdpDaysFromToday(120), status: 'Approved', newDocument: false },
     { plate: '45-XY-90', model: 'Honda PCX 125', type: 'Moto', courier: 'Constantino Courier', maxWeightKg: 25, maxVolM3: 0.1,
       insuranceExpiry: pdpDaysFromToday(12), inspectionExpiry: pdpDaysFromToday(90), status: 'Approved', newDocument: false },
     { plate: 'BK-0007', model: 'Cargo bike', type: 'Bike', courier: 'Constantino Courier', maxWeightKg: 40, maxVolM3: 0.2,
-      insuranceExpiry: pdpDaysFromToday(300), inspectionExpiry: pdpDaysFromToday(300), status: 'Pending', newDocument: true }
+      insuranceExpiry: pdpDaysFromToday(300), inspectionExpiry: pdpDaysFromToday(300), status: 'Pending', newDocument: true },
+    // Extra demo couriers – one approved vehicle each
+    { plate: 'CR-01-AL', model: 'Citroën Berlingo', type: 'Van', courier: 'Coraline Cargo', maxWeightKg: 650, maxVolM3: 3.3,
+      insuranceExpiry: pdpDaysFromToday(180), inspectionExpiry: pdpDaysFromToday(150), status: 'Approved', newDocument: false },
+    { plate: 'CF-88-WU', model: 'Yamaha NMAX 125', type: 'Moto', courier: 'Confucius Courier', maxWeightKg: 25, maxVolM3: 0.1,
+      insuranceExpiry: pdpDaysFromToday(240), inspectionExpiry: pdpDaysFromToday(200), status: 'Approved', newDocument: false },
+    { plate: 'CL-30-PA', model: 'Mercedes Sprinter', type: 'Truck', courier: 'Cleopatra Carrier', maxWeightKg: 3500, maxVolM3: 20,
+      insuranceExpiry: pdpDaysFromToday(90), inspectionExpiry: pdpDaysFromToday(60), status: 'Approved', newDocument: false }
 ];
 
 // ---------- storage helpers ----------
@@ -159,10 +214,10 @@ function pdpSave(key, value) {
     }
 }
 
-function pdpGetOrders() { return pdpLoad('pdpOrders', PDP_DEFAULT_ORDERS); }
+function pdpGetOrders() { pdpMergeDemoExtras(); return pdpLoad('pdpOrders', PDP_DEFAULT_ORDERS); }
 function pdpSaveOrders(orders) { pdpSave('pdpOrders', orders); }
 
-function pdpGetVehicles() { return pdpLoad('pdpVehicles', PDP_DEFAULT_VEHICLES); }
+function pdpGetVehicles() { pdpMergeDemoExtras(); return pdpLoad('pdpVehicles', PDP_DEFAULT_VEHICLES); }
 function pdpSaveVehicles(vehicles) { pdpSave('pdpVehicles', vehicles); }
 
 function pdpFindOrder(id) {
@@ -211,7 +266,7 @@ function pdpDaysUntil(dateString) {
 // Removes all saved prototype data so every page starts from the sample data again
 function pdpResetData() {
     ['pdpOrders', 'pdpVehicles', 'pdpPendingCouriers', 'pdpCourierVehicle', 'adminUsers',
-     'pendingStaff', 'registeredUsers', 'pdpUsersSeeded', 'pdpDemoNames', 'currentUser', 'adminProfile'].forEach(function (key) {
+     'pendingStaff', 'registeredUsers', 'pdpUsersSeeded', 'pdpDemoNames', 'pdpDemoExtras', 'currentUser', 'adminProfile'].forEach(function (key) {
         localStorage.removeItem(key);
     });
 }
@@ -354,6 +409,10 @@ const PDP_DEMO_USERS = [
     { name: 'Constantino Courier', username: 'courier', email: 'courier@pdp.pt', phone: '912000002', nif: '500000002', citizenCard: '100000022ZZ2', password: 'courier123', role: 'courier', status: 'active', approvedBy: 'Sofia Staff' },
     { name: 'Sofia Staff',     username: 'staff',   email: 'staff@pdp.pt',   phone: '912000003', nif: '500000003', citizenCard: '100000033ZZ3', password: 'staff123',   role: 'staff',   status: 'active', approvedBy: 'António Admin' },
     { name: 'António Admin',   username: 'admin',   email: 'admin@pdp.pt',   phone: '912000004', nif: '500000004', citizenCard: '100000044ZZ4', password: 'admin123',   role: 'admin',   status: 'active' },
+    // More active couriers (all approved by Sofia Staff) – so WP3 has several couriers to choose from
+    { name: 'Coraline Cargo',   username: 'coraline',  email: 'coraline@pdp.pt',  phone: '912000008', nif: '500000008', citizenCard: '100000088ZZ8', password: 'coraline123',  role: 'courier', status: 'active', approvedBy: 'Sofia Staff' },
+    { name: 'Confucius Courier', username: 'confucius', email: 'confucius@pdp.pt', phone: '912000009', nif: '500000009', citizenCard: '100000099ZZ9', password: 'confucius123', role: 'courier', status: 'active', approvedBy: 'Sofia Staff' },
+    { name: 'Cleopatra Carrier', username: 'cleopatra', email: 'cleopatra@pdp.pt', phone: '912000011', nif: '500000011', citizenCard: '100000112ZZ2', password: 'cleopatra123', role: 'courier', status: 'active', approvedBy: 'Sofia Staff' },
     // waiting for approval, so the admin and staff pages have something to manage
     { name: 'Johan Lindström', username: 'johan',   email: 'johan@pdp.pt',   phone: '912000005', nif: '500000005', citizenCard: '100000055ZZ5', password: 'johan1234',  role: 'staff',   status: 'pending' },
     { name: 'Elin Berg',       username: 'elin',    email: 'elin@pdp.pt',    phone: '912000006', nif: '500000006', citizenCard: '100000066ZZ6', password: 'elin12345',  role: 'staff',   status: 'pending' },
@@ -394,14 +453,14 @@ function pdpSeedUsers() {
 // Demo accounts have fixed names. Browsers that saved other names for them (older versions,
 // or a rename on the "My account" page while testing) get the demo names back once.
 // Matched by USERNAME; orders, vehicles and "approved by" follow via pdpRenameEverywhere.
-const PDP_DEMO_NAMES_VERSION = '3';
+const PDP_DEMO_NAMES_VERSION = '4';   // 4: Coraline Couriere -> Coraline Cargo
 
 function pdpMigrateDemoNames() {
     try {
         if (localStorage.getItem('pdpDemoNames') === PDP_DEMO_NAMES_VERSION) return;
         localStorage.setItem('pdpDemoNames', PDP_DEMO_NAMES_VERSION);   // set first: the renames below read the users again
         const saved = JSON.parse(localStorage.getItem('registeredUsers')) || [];
-        ['client', 'courier', 'staff', 'admin'].forEach(function (username) {
+        ['client', 'courier', 'staff', 'admin', 'coraline'].forEach(function (username) {
             const demo = PDP_DEMO_USERS.find(function (d) { return d.username === username; });
             const user = saved.find(function (u) { return u.username === username && u.role === demo.role; });
             if (!user || user.name === demo.name) return;
@@ -414,8 +473,41 @@ function pdpMigrateDemoNames() {
     } catch (e) { /* storage blocked: nothing saved, nothing to rename */ }
 }
 
+// New demo data added later (extra couriers, their vehicles and deliveries) is merged once into
+// browsers that already saved data – nothing that is already there is changed.
+const PDP_DEMO_EXTRAS_VERSION = '3';   // 2: demo courier Cornelius Cargo removed · 3: colleagues' open deliveries added
+
+function pdpMergeDemoExtras() {
+    try {
+        if (localStorage.getItem('pdpDemoExtras') === PDP_DEMO_EXTRAS_VERSION) return;
+        localStorage.setItem('pdpDemoExtras', PDP_DEMO_EXTRAS_VERSION);
+        // Remove the dropped demo courier (account, cargo bike, delivery) if version 1 had added him
+        function drop(key, isOld) {
+            const saved = JSON.parse(localStorage.getItem(key));
+            if (saved) localStorage.setItem(key, JSON.stringify(saved.filter(function (x) { return !isOld(x); })));
+        }
+        drop('registeredUsers', function (u) { return u.username === 'cornelius' && u.name === 'Cornelius Cargo'; });
+        drop('pdpVehicles', function (v) { return v.plate === 'BK-0042' && v.courier === 'Cornelius Cargo'; });
+        drop('pdpOrders', function (o) { return o.id === 'RR-1032' && o.courier === 'Cornelius Cargo'; });
+        function merge(key, defaults, sameItem) {
+            const saved = JSON.parse(localStorage.getItem(key));
+            if (!saved) return;   // nothing saved yet: the defaults are used anyway
+            defaults.forEach(function (item) {
+                if (!saved.some(function (s) { return sameItem(s, item); })) saved.push(JSON.parse(JSON.stringify(item)));
+            });
+            localStorage.setItem(key, JSON.stringify(saved));
+        }
+        const now = new Date().toISOString();
+        merge('registeredUsers', PDP_DEMO_USERS.map(function (u) { return Object.assign({ created_at: now }, u); }),
+            function (a, b) { return a.username.toLowerCase() === b.username || a.email.toLowerCase() === b.email; });
+        merge('pdpVehicles', PDP_DEFAULT_VEHICLES, function (a, b) { return a.plate === b.plate; });
+        merge('pdpOrders', PDP_DEFAULT_ORDERS, function (a, b) { return a.id === b.id; });
+    } catch (e) { /* storage blocked: the defaults are used */ }
+}
+
 function pdpGetUsers() {
     pdpSeedUsers();
+    pdpMergeDemoExtras();
     pdpMigrateDemoNames();
     try {
         const saved = JSON.parse(localStorage.getItem('registeredUsers'));

@@ -61,14 +61,19 @@ Open the repository in VS Code and click **Go Live** – the root `index.html` s
 
 Demo accounts (prototype only):
 
-| Role | Username | Password |
-|---|---|---|
-| Client | `client` | `client123` |
-| Courier | `courier` | `courier123` |
-| Staff | `staff` | `staff123` |
-| Admin | `admin` | `admin123` |
+| Role | Name | Email (login) | Password |
+|---|---|---|---|
+| Client | Carla Cliente | `client@pdp.pt` | `client123` |
+| Courier | Constantino Courier | `courier@pdp.pt` | `courier123` |
+| Courier | Coraline Cargo | `coraline@pdp.pt` | `coraline123` |
+| Courier | Confucius Courier | `confucius@pdp.pt` | `confucius123` |
+| Courier | Cleopatra Carrier | `cleopatra@pdp.pt` | `cleopatra123` |
+| Staff | Sofia Staff | `staff@pdp.pt` | `staff123` |
+| Admin | António Admin | `admin@pdp.pt` | `admin123` |
 
-Log in with the **email** (`client@pdp.pt`, `courier@pdp.pt`, `staff@pdp.pt`, `admin@pdp.pt`).
+Each extra courier has one approved vehicle (Coraline: van, Confucius: moto, Cleopatra: truck)
+and one finished delivery in a different part of Porto (Matosinhos, Gaia, Foz). For WP3 that last drop-off is the courier's current location.
+
 There are also accounts waiting for approval: staff `johan@pdp.pt` / `elin@pdp.pt` (approve on the admin page)
 and courier `pedro.novo@pdp.pt` (approve on the staff page).
 
@@ -105,6 +110,21 @@ so the login session cookie works:
 Import [`../database/schema.sql`](../database/schema.sql) in phpMyAdmin first.
 All sample accounts in the database use the password `password`
 (e.g. `admin`, `staff`, `carla`, `miguel`).
+
+## WP3 – Dispatch flow (Sprint 2)
+
+```
+Client creates shipment ──► pays (WP1) ──► order = "Pending"   ← dispatch starts HERE, not at creation
+                                              │
+                    nearest courier WITH capacity gets the offer ── 60 s ──► accepts → order is theirs
+                                              │                         └─► declines / no answer
+                                              ▼
+                    next-nearest courier with capacity ─────────── 60 s ──► …
+                                              │
+                    nobody left (all declined or no one has room)
+                                              ▼
+                    order stays in the shared list, any courier with room can take it
+```
 
 ---
 

@@ -187,6 +187,19 @@
                 </section>
             </div>
 
+            <!-- All deliveries: what every courier is doing right now (courier.js renderAllDeliveries) -->
+            <section class="panel">
+                <h3 class="panel-title">All deliveries <span class="panel-note">who has what right now</span></h3>
+                <div class="table-scroll">
+                    <table class="completed-table all-deliveries-table">
+                        <thead>
+                            <tr><th>Order</th><th>Product</th><th>Destination</th><th>Courier</th><th>Vehicle</th><th>State</th><th>Since</th></tr>
+                        </thead>
+                        <tbody id="all-deliveries-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- Completed orders -->
             <section class="panel">
                 <h3 class="panel-title">Completed orders</h3>
