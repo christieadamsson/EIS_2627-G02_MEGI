@@ -308,6 +308,81 @@ function pdpLogout() {
 // Prototype only – in Sprint 2 the PHP backend checks the session (requireRole()).
 // =========================================
 const PDP_ROLE_LABELS = { client: 'Client', courier: 'Courier', staff: 'Staff', admin: 'Admin' };
+const PDP_ROLE_PAGES = { client: '2_client.html', courier: '3_courier.html', staff: '5_staff.html', admin: '4_admin.html' };
+
+// =========================================
+// TEMPORARY master account for testing (master@pdp.pt / master123)
+// While logged in as master, a "View as" menu in the header switches to ANY account
+// without a password, and pages for other roles switch automatically instead of
+// showing "No access". The session keeps master: true so you can always switch back.
+// To remove before handing in: set PDP_MASTER_ENABLED = false (or delete the account).
+// =========================================
+const PDP_MASTER_ENABLED = true;
+
+function pdpIsMasterSession() {
+    const me = pdpCurrentUser();
+    if (!PDP_MASTER_ENABLED || !me || !me.master) return false;
+    const master = pdpGetUsers().find(function (u) { return u.master && u.status === PDP_USER_STATUS.ACTIVE; });
+    return !!master;
+}
+
+// Act as another account (keeps the master flag in the session)
+function pdpMasterActAs(username) {
+    const user = pdpFindUser(username);
+    if (!user) return null;
+    pdpSave('currentUser', { name: user.name, username: user.username, role: user.role, master: true });
+    return user;
+}
+
+// Master opening a page of another role: switch to a fitting active account (demo accounts first)
+function pdpMasterSwitchFor(roles) {
+    const preferred = ['client', 'courier', 'staff', 'admin'];
+    const candidates = pdpGetUsers().filter(function (u) {
+        return roles.indexOf(u.role) !== -1 && u.status === PDP_USER_STATUS.ACTIVE && !u.master;
+    }).sort(function (a, b) {
+        const ia = preferred.indexOf(a.username), ib = preferred.indexOf(b.username);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+    return candidates.length ? pdpMasterActAs(candidates[0].username) : null;
+}
+
+// The "View as" menu in the header
+function pdpSetupMasterSwitcher(group) {
+    if (!pdpIsMasterSession()) return;
+    const me = pdpCurrentUser();
+    const select = document.createElement('select');
+    select.className = 'master-switch';
+    select.title = 'Master: act as any account';
+    select.setAttribute('aria-label', 'View as');
+    const groups = [['admin', 'Admins'], ['staff', 'Staff'], ['courier', 'Couriers'], ['client', 'Clients']];
+    groups.forEach(function (g) {
+        const users = pdpGetUsers().filter(function (u) { return u.role === g[0] && u.status === PDP_USER_STATUS.ACTIVE; });
+        if (!users.length) return;
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = g[1];
+        users.forEach(function (u) {
+            const option = document.createElement('option');
+            option.value = u.username;
+            option.textContent = (u.master ? '★ ' : '') + u.name;
+            option.selected = u.username === me.username;
+            optgroup.append(option);
+        });
+        select.append(optgroup);
+    });
+    select.addEventListener('change', function () {
+        const user = pdpMasterActAs(select.value);
+        if (!user) return;
+        const here = location.pathname.split('/').pop();
+        const required = (document.body.dataset.requireRole || '').split(/\s+/).filter(Boolean);
+        // Stay on this page if the new account may use it (or it is public), otherwise open its own page
+        if (!required.length || required.indexOf(user.role) !== -1) location.reload();
+        else location.href = PDP_ROLE_PAGES[user.role] || here;
+    });
+    const label = document.createElement('span');
+    label.className = 'master-label';
+    label.textContent = 'View as';
+    group.prepend(label, select);
+}
 
 function pdpHasAccess(roles) {
     const me = pdpCurrentUser();
@@ -322,6 +397,8 @@ function pdpGuardPage() {
     const required = body && body.dataset.requireRole;
     if (!required) return true;
     const roles = required.split(/\s+/);
+    // TEMPORARY master: switch to a fitting account instead of "No access"
+    if (!pdpHasAccess(roles) && pdpIsMasterSession()) pdpMasterSwitchFor(roles);
     if (pdpHasAccess(roles)) {
         // Staff may have renamed this account: page scripts read the name from the session
         const me = pdpCurrentUser();
@@ -387,6 +464,7 @@ function pdpSetupLoginButton() {
         group.className = 'header-account';
         button.before(group);
         group.append(account, button);
+        pdpSetupMasterSwitcher(group);
     });
 }
 
@@ -416,6 +494,8 @@ const PDP_DEMO_USERS = [
     // waiting for approval, so the admin and staff pages have something to manage
     { name: 'Johan Lindström', username: 'johan',   email: 'johan@pdp.pt',   phone: '912000005', nif: '500000005', citizenCard: '100000055ZZ5', password: 'johan1234',  role: 'staff',   status: 'pending' },
     { name: 'Elin Berg',       username: 'elin',    email: 'elin@pdp.pt',    phone: '912000006', nif: '500000006', citizenCard: '100000066ZZ6', password: 'elin12345',  role: 'staff',   status: 'pending' },
+    // TEMPORARY test account – see PDP_MASTER_ENABLED. Remove before handing in.
+    { name: 'Master Tester',   username: 'master',  email: 'master@pdp.pt',  phone: '912000099', nif: '500000099', citizenCard: '100000999ZZ9', password: 'master123',  role: 'admin',   status: 'active', master: true },
     { name: 'Pedro Novo',      username: 'pedro',   email: 'pedro.novo@pdp.pt', phone: '912000007', nif: '500000007', citizenCard: '100000077ZZ7', password: 'pedro1234', role: 'courier', status: 'pending' }
 ];
 
@@ -475,7 +555,7 @@ function pdpMigrateDemoNames() {
 
 // New demo data added later (extra couriers, their vehicles and deliveries) is merged once into
 // browsers that already saved data – nothing that is already there is changed.
-const PDP_DEMO_EXTRAS_VERSION = '3';   // 2: demo courier Cornelius Cargo removed · 3: colleagues' open deliveries added
+const PDP_DEMO_EXTRAS_VERSION = '4';   // 4: temporary master account   // 2: demo courier Cornelius Cargo removed · 3: colleagues' open deliveries added
 
 function pdpMergeDemoExtras() {
     try {

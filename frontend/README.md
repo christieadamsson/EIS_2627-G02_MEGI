@@ -70,6 +70,12 @@ Demo accounts (prototype only):
 | Courier | Cleopatra Carrier | `cleopatra@pdp.pt` | `cleopatra123` |
 | Staff | Sofia Staff | `staff@pdp.pt` | `staff123` |
 | Admin | António Admin | `admin@pdp.pt` | `admin123` |
+| **Master (temporary, testing only)** | Master Tester | `master@pdp.pt` | `master123` |
+
+**Master account (temporary):** while logged in as master, a **"View as"** menu appears in the header.
+Pick any account to act as them without a password; opening a page of another role switches
+automatically instead of showing "No access". Turn it off before handing in:
+`PDP_MASTER_ENABLED = false` in `js/data.js` (and remove the account from `PDP_DEMO_USERS`).
 
 Each extra courier has one approved vehicle (Coraline: van, Confucius: moto, Cleopatra: truck)
 and one finished delivery in a different part of Porto (Matosinhos, Gaia, Foz). For WP3 that last drop-off is the courier's current location.

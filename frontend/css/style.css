@@ -2455,3 +2455,25 @@ footer {
     color: #7a4b00;
 }
 
+/* TEMPORARY master account: "View as" menu in the header (data.js pdpSetupMasterSwitcher) */
+.master-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #b45309;
+}
+
+.master-switch {
+    max-width: 200px;
+    padding: 8px 10px;
+    border: 2px solid #f5a524;
+    border-radius: 20px;
+    background-color: #fffaf0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    cursor: pointer;
+}
+

@@ -150,7 +150,7 @@ loginForm.addEventListener('submit', function (e) {
     }
 
     // Remember who is logged in, so other pages can use it later
-    localStorage.setItem('currentUser', JSON.stringify({ name: user.name, username: user.username, role: user.role }));
+    localStorage.setItem('currentUser', JSON.stringify({ name: user.name, username: user.username, role: user.role, master: !!user.master }));
 
     showMessage('success', 'Welcome, ' + user.name + '! Opening the ' + roleNames[user.role] + ' page…');
     // Came from a link like 1_login.html?next=2_client.html#RR-1042 -> go back there,
